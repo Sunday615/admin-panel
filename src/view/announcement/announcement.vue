@@ -143,7 +143,7 @@
 
               <!-- Link -->
               <label class="label">
-                <span>Link (Optional)</span>
+                <span>Link (ຖ້າມີ)</span>
                 <div class="inputWrap">
                   <i class="fa-solid fa-link"></i>
                   <input v-model.trim="form.link" class="inp" type="text" placeholder="https://..." />
@@ -486,8 +486,8 @@ const navItems = [
   { key: "news", label: "ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ", to: "/newinsert", icon: "fa-solid fa-newspaper" },
   { key: "joblist", label: "ປະກາດຮັບສະມັກພະນັກງານ", to: "/joblist", icon: "fa-solid fa-user-plus" },
   { key: "announcement", label: "ປະກາດ", to: "/announcement", icon: "fa-solid fa-bullhorn" },
-  { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", icon: "fa-solid fa-people-group" },
-  { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", icon: "fa-solid fa-users-rectangle" },
+  // { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", icon: "fa-solid fa-people-group" },
+  // { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", icon: "fa-solid fa-users-rectangle" },
 ];
 
 /* ✅ edit mode by query (?id=) or params (:id) */

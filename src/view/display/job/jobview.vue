@@ -116,7 +116,7 @@
           <div class="metaRow js-reveal">
             <div class="metaPill">
               <i class="fa-solid fa-database"></i>
-              <span>Total:</span>
+              <span>ສະໝັກພະນັກງານທັງໝົດ:</span>
               <b>{{ jobs.length }}</b>
             </div>
 
@@ -132,9 +132,16 @@
 
             <div class="metaPill" v-else>
               <i class="fa-solid fa-list"></i>
-              <span>Filtered:</span>
+              <span>ຄົ້ນຫາພົບ:</span>
               <b>{{ rows.length }}</b>
             </div>
+
+             <router-link to="/newinsert">
+            <div class="metaPill" id="add_news">
+              <i class="fa-solid fa-plus"></i>
+              <span>ເພີ່ມຮັບສະໝັກພະນັກງານ</span>
+            </div>
+            </router-link>
           </div>
 
           <!-- Table -->
@@ -395,8 +402,8 @@ const navItems = [
   { key: "news", label: "ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ", to: "/newinsert", fa: "fa-solid fa-newspaper" },
   { key: "protocols", label: "ປະກາດຮັບສະມັກພະນັກງານ", to: "/joblist", fa: "fa-solid fa-user-plus" },
   { key: "announcement", label: "ປະກາດ", to: "/announcement", fa: "fa-solid fa-bullhorn" },
-  { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", fa: "fa-solid fa-people-group" },
-  { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", fa: "fa-solid fa-users-rectangle" },
+  // { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", fa: "fa-solid fa-people-group" },
+  // { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", fa: "fa-solid fa-users-rectangle" },
 ];
 
 /* =========================
@@ -1060,6 +1067,13 @@ onBeforeUnmount(() => {
 /* =========================
    DARK BLUE TECH THEME (same as your page)
    ========================= */
+   #add_news {
+  background-color: #28a475;
+}
+#add_news:hover{
+ background-color: #1e6f56;
+ transition: background-color 0.3s ease;
+}
 :root {
   color-scheme: dark;
 }

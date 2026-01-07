@@ -18,15 +18,8 @@
       </router-link>
 
       <nav class="nav js-reveal">
-        <RouterLink
-          v-for="item in navItems"
-          :key="item.key"
-          :to="item.to"
-          class="navItem"
-          active-class="active"
-          @mouseenter="navHover($event, true)"
-          @mouseleave="navHover($event, false)"
-        >
+        <RouterLink v-for="item in navItems" :key="item.key" :to="item.to" class="navItem" active-class="active"
+          @mouseenter="navHover($event, true)" @mouseleave="navHover($event, false)">
           <span class="navIcon"><i :class="item.fa"></i></span>
           <span class="navLabel">{{ item.label }}</span>
           <span class="navPill" />
@@ -35,13 +28,8 @@
 
       <div class="spacer" />
 
-      <button
-        class="logout js-reveal"
-        type="button"
-        @click="logout"
-        @mouseenter="btnHover($event, true)"
-        @mouseleave="btnHover($event, false)"
-      >
+      <button class="logout js-reveal" type="button" @click="logout" @mouseenter="btnHover($event, true)"
+        @mouseleave="btnHover($event, false)">
         <span class="navIcon"><i class="fa-solid fa-right-from-bracket"></i></span>
         Log Out
       </button>
@@ -61,15 +49,8 @@
         </div>
 
         <div class="topActions">
-          <button
-            class="iconBtn"
-            type="button"
-            aria-label="Refresh"
-            title="Refresh"
-            @click="fetchNews"
-            @mouseenter="iconHover($event, true)"
-            @mouseleave="iconHover($event, false)"
-          >
+          <button class="iconBtn" type="button" aria-label="Refresh" title="Refresh" @click="fetchNews"
+            @mouseenter="iconHover($event, true)" @mouseleave="iconHover($event, false)">
             <i class="fa-solid fa-rotate-right"></i>
           </button>
 
@@ -111,7 +92,7 @@
           <div class="metaRow js-reveal">
             <div class="metaPill">
               <i class="fa-solid fa-database"></i>
-              <span>Total:</span>
+              <span>ຂ່າວສານທັງໝົດ:</span>
               <b>{{ news.length }}</b>
             </div>
 
@@ -127,16 +108,23 @@
 
             <div class="metaPill" v-else>
               <i class="fa-solid fa-list"></i>
-              <span>Filtered:</span>
+              <span>ຄົ້ນຫາພົບ:</span>
               <b>{{ rows.length }}</b>
             </div>
 
             <!-- ✅ Pagination info pill -->
             <div class="metaPill" v-if="!loading && !error && rows.length">
               <i class="fa-solid fa-book-open"></i>
-              <span>Page:</span>
+              <span>ໜ້າ:</span>
               <b>{{ page }}/{{ totalPages }}</b>
             </div>
+
+            <router-link to="/newinsert">
+            <div class="metaPill" id="add_news">
+              <i class="fa-solid fa-plus"></i>
+              <span>ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ</span>
+            </div>
+            </router-link>
           </div>
 
           <!-- Table -->
@@ -144,17 +132,9 @@
             <table class="table">
               <thead>
                 <tr>
-                  <th
-                    v-for="col in tableCols"
-                    :key="col"
-                    class="th"
-                    :class="{ colWide: isTitleCol(col) }"
-                    role="button"
-                    tabindex="0"
-                    @click="toggleSort(col)"
-                    @keydown.enter.prevent="toggleSort(col)"
-                    @keydown.space.prevent="toggleSort(col)"
-                  >
+                  <th v-for="col in tableCols" :key="col" class="th" :class="{ colWide: isTitleCol(col) }" role="button"
+                    tabindex="0" @click="toggleSort(col)" @keydown.enter.prevent="toggleSort(col)"
+                    @keydown.space.prevent="toggleSort(col)">
                     <span class="thLabel">{{ colLabel(col) }}</span>
                     <span class="sortIcon" v-if="sortKey === col">
                       <i :class="sortDir === 'asc' ? 'fa-solid fa-caret-up' : 'fa-solid fa-caret-down'"></i>
@@ -167,14 +147,8 @@
               </thead>
 
               <tbody ref="tbodyEl">
-                <tr
-                  v-for="(n, idx) in pagedRows"
-                  :key="rowKey(n, idx)"
-                  class="tr js-reveal rowAnim"
-                  @click="openOverlay(n)"
-                  @mouseenter="rowHover($event, true)"
-                  @mouseleave="rowHover($event, false)"
-                >
+                <tr v-for="(n, idx) in pagedRows" :key="rowKey(n, idx)" class="tr js-reveal rowAnim"
+                  @click="openOverlay(n)" @mouseenter="rowHover($event, true)" @mouseleave="rowHover($event, false)">
                   <td v-for="col in tableCols" :key="col" class="td" :class="{ colWide: isTitleCol(col) }">
                     <!-- ✅ idnews => running number (with pagination offset) -->
                     <template v-if="isNoCol(col)">
@@ -185,13 +159,8 @@
                       <div class="titleCell">
                         <div class="tMain">{{ formatCell(n?.[col], col) }}</div>
 
-                        <img
-                          v-if="heroUrlOf(n)"
-                          class="thumbMini"
-                          :src="heroUrlOf(n)"
-                          alt="Hero"
-                          @click.stop="openOverlay(n)"
-                        />
+                        <img v-if="heroUrlOf(n)" class="thumbMini" :src="heroUrlOf(n)" alt="Hero"
+                          @click.stop="openOverlay(n)" />
                       </div>
                     </template>
 
@@ -203,41 +172,22 @@
                   <!-- ✅ Actions -->
                   <td class="td tdLast">
                     <div class="actionRow">
-                      <button
-                        class="pillBtn"
-                        type="button"
-                        title="View"
-                        @click.stop="openOverlay(n)"
-                        :disabled="isBusy(n)"
-                        @mouseenter="pillHover($event, true)"
-                        @mouseleave="pillHover($event, false)"
-                      >
+                      <button class="pillBtn" type="button" title="View" @click.stop="openOverlay(n)"
+                        :disabled="isBusy(n)" @mouseenter="pillHover($event, true)"
+                        @mouseleave="pillHover($event, false)">
                         <i class="fa-regular fa-eye"></i>
                         View
                       </button>
 
-                      <button
-                        class="pillBtn"
-                        type="button"
-                        title="Edit"
-                        @click.stop="askEdit(n)"
-                        :disabled="isBusy(n)"
-                        @mouseenter="pillHover($event, true)"
-                        @mouseleave="pillHover($event, false)"
-                      >
+                      <button class="pillBtn" type="button" title="Edit" @click.stop="askEdit(n)" :disabled="isBusy(n)"
+                        @mouseenter="pillHover($event, true)" @mouseleave="pillHover($event, false)">
                         <i class="fa-regular fa-pen-to-square"></i>
                         Edit
                       </button>
 
-                      <button
-                        class="pillBtn danger"
-                        type="button"
-                        title="Delete"
-                        @click.stop="askDelete(n)"
-                        :disabled="isBusy(n)"
-                        @mouseenter="pillHover($event, true)"
-                        @mouseleave="pillHover($event, false)"
-                      >
+                      <button class="pillBtn danger" type="button" title="Delete" @click.stop="askDelete(n)"
+                        :disabled="isBusy(n)" @mouseenter="pillHover($event, true)"
+                        @mouseleave="pillHover($event, false)">
                         <i class="fa-regular fa-trash-can"></i>
                         Delete
                       </button>
@@ -267,14 +217,8 @@
               <button v-if="pageRange.start > 1" class="pBtn" type="button" @click="goPage(1, $event)">1</button>
               <span v-if="pageRange.start > 2" class="pDots">…</span>
 
-              <button
-                v-for="p in pageRange.pages"
-                :key="'p' + p"
-                class="pBtn"
-                :class="{ active: p === page }"
-                type="button"
-                @click="goPage(p, $event)"
-              >
+              <button v-for="p in pageRange.pages" :key="'p' + p" class="pBtn" :class="{ active: p === page }"
+                type="button" @click="goPage(p, $event)">
                 {{ p }}
               </button>
 
@@ -300,14 +244,8 @@
                     {{ titleOf(selected) }}
                   </div>
 
-                  <button
-                    class="iconBtn"
-                    type="button"
-                    aria-label="Close"
-                    @click="closeOverlay"
-                    @mouseenter="iconHover($event, true)"
-                    @mouseleave="iconHover($event, false)"
-                  >
+                  <button class="iconBtn" type="button" aria-label="Close" @click="closeOverlay"
+                    @mouseenter="iconHover($event, true)" @mouseleave="iconHover($event, false)">
                     <i class="fa-solid fa-xmark"></i>
                   </button>
                 </div>
@@ -324,25 +262,14 @@
                     </div>
 
                     <div class="mediaGrid">
-                      <button
-                        v-if="heroUrlOf(selected)"
-                        class="mediaItem hero"
-                        type="button"
-                        @click.stop="openImage(heroUrlOf(selected))"
-                        title="Click to view"
-                      >
+                      <button v-if="heroUrlOf(selected)" class="mediaItem hero" type="button"
+                        @click.stop="openImage(heroUrlOf(selected))" title="Click to view">
                         <img :src="heroUrlOf(selected)" alt="Hero" />
                         <span class="mediaTag">Hero</span>
                       </button>
 
-                      <button
-                        v-for="(src, i) in galleryUrlsOf(selected)"
-                        :key="src + i"
-                        class="mediaItem"
-                        type="button"
-                        @click.stop="openImage(src)"
-                        title="Click to view"
-                      >
+                      <button v-for="(src, i) in galleryUrlsOf(selected)" :key="src + i" class="mediaItem" type="button"
+                        @click.stop="openImage(src)" title="Click to view">
                         <img :src="src" :alt="`Gallery ${i + 1}`" />
                         <span class="mediaTag">#{{ i + 1 }}</span>
                       </button>
@@ -1151,10 +1078,10 @@ async function fetchNews() {
     const list = Array.isArray(data)
       ? data
       : Array.isArray(data?.news)
-      ? data.news
-      : Array.isArray(data?.data)
-      ? data.data
-      : [];
+        ? data.news
+        : Array.isArray(data?.data)
+          ? data.data
+          : [];
 
     news.value = list;
     page.value = 1;
@@ -1227,15 +1154,26 @@ onBeforeUnmount(() => {
 /* ======= SMALL UPDATES: reduce header column size + actions column ======= */
 
 /* ✅ smaller table header (ลดขนาด columns header ลง) */
+#add_news {
+  background-color: #28a475;
+}
+#add_news:hover{
+ background-color: #1e6f56;
+ transition: background-color 0.3s ease;
+}
 .th,
 .td {
-  padding: 10px 10px; /* was 12px */
-  font-size: 12px; /* was 13px */
+  padding: 10px 10px;
+  /* was 12px */
+  font-size: 12px;
+  /* was 13px */
 }
+
 .thLabel {
   font-size: 12px;
   letter-spacing: 0.2px;
 }
+
 .sortIcon i {
   font-size: 12px;
 }
@@ -1259,6 +1197,7 @@ onBeforeUnmount(() => {
 .thLast {
   cursor: default;
 }
+
 .tdLast {
   width: 320px;
 }
@@ -1318,14 +1257,17 @@ onBeforeUnmount(() => {
   gap: 12px;
   flex-wrap: wrap;
 }
+
 .pagerInfo {
   color: rgba(255, 255, 255, 0.72);
   font-weight: 900;
   font-size: 12px;
 }
+
 .pagerInfo b {
   color: rgba(255, 255, 255, 0.92);
 }
+
 .pagerBtns {
   display: flex;
   align-items: center;
@@ -1333,6 +1275,7 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+
 .pBtn {
   height: 36px;
   padding: 0 12px;
@@ -1347,28 +1290,34 @@ onBeforeUnmount(() => {
   gap: 8px;
   will-change: transform;
 }
+
 .pBtn:hover {
   border-color: rgba(56, 189, 248, 0.18);
   color: rgba(255, 255, 255, 0.95);
 }
+
 .pBtn.active {
   border-color: rgba(56, 189, 248, 0.28);
   background: rgba(56, 189, 248, 0.12);
   color: rgba(255, 255, 255, 0.95);
   animation: pageActive 0.24s ease-out;
 }
+
 @keyframes pageActive {
   from {
     transform: scale(0.97);
   }
+
   to {
     transform: scale(1);
   }
 }
+
 .pBtn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
 .pDots {
   color: rgba(255, 255, 255, 0.55);
   font-weight: 950;
@@ -1377,19 +1326,24 @@ onBeforeUnmount(() => {
 
 /* ======= Modern ambient animations ======= */
 @keyframes floatGlowA {
+
   0%,
   100% {
     transform: translate(0px, 0px) scale(1);
   }
+
   50% {
     transform: translate(28px, -18px) scale(1.06);
   }
 }
+
 @keyframes floatGlowB {
+
   0%,
   100% {
     transform: translate(0px, 0px) scale(1);
   }
+
   50% {
     transform: translate(-22px, 16px) scale(1.05);
   }
@@ -1401,13 +1355,16 @@ onBeforeUnmount(() => {
     transform: translateX(-70%);
     opacity: 0;
   }
+
   25% {
     opacity: 0.55;
   }
+
   55% {
     transform: translateX(70%);
     opacity: 0;
   }
+
   100% {
     transform: translateX(70%);
     opacity: 0;
@@ -1416,13 +1373,16 @@ onBeforeUnmount(() => {
 
 /* reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
+
   .glow-a,
   .glow-b {
     animation: none !important;
   }
+
   .tableWrap::before {
     animation: none !important;
   }
+
   .pBtn.active {
     animation: none !important;
   }
@@ -1432,9 +1392,11 @@ onBeforeUnmount(() => {
 :root {
   color-scheme: dark;
 }
+
 * {
   box-sizing: border-box;
 }
+
 .app.tech {
   --bg0: #050914;
   --bg1: #070e23;
@@ -1458,6 +1420,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   position: relative;
 }
+
 .app.tech::before {
   content: "";
   position: fixed;
@@ -1469,12 +1432,14 @@ onBeforeUnmount(() => {
   background-size: 46px 46px;
   mask-image: radial-gradient(circle at 35% 18%, black 0%, transparent 60%);
 }
+
 .glow {
   position: fixed;
   pointer-events: none;
   filter: blur(52px);
   opacity: 0.75;
 }
+
 .glow-a {
   width: 560px;
   height: 560px;
@@ -1483,6 +1448,7 @@ onBeforeUnmount(() => {
   background: radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.4), transparent 62%);
   animation: floatGlowA 10s ease-in-out infinite;
 }
+
 .glow-b {
   width: 560px;
   height: 560px;
@@ -1505,36 +1471,39 @@ onBeforeUnmount(() => {
   position: relative;
   overflow: hidden;
 }
+
 .sidebar::before {
   content: "";
   position: absolute;
   inset: -2px;
-  background: linear-gradient(
-    90deg,
-    rgba(56, 189, 248, 0.45),
-    rgba(99, 102, 241, 0.25),
-    rgba(14, 165, 233, 0.22),
-    rgba(56, 189, 248, 0.45)
-  );
+  background: linear-gradient(90deg,
+      rgba(56, 189, 248, 0.45),
+      rgba(99, 102, 241, 0.25),
+      rgba(14, 165, 233, 0.22),
+      rgba(56, 189, 248, 0.45));
   opacity: 0.14;
   filter: blur(14px);
   pointer-events: none;
   animation: holoShift 7s linear infinite;
 }
+
 @keyframes holoShift {
   0% {
     transform: translateX(-16%);
   }
+
   100% {
     transform: translateX(16%);
   }
 }
+
 .brand {
   display: flex;
   gap: 12px;
   align-items: center;
   position: relative;
 }
+
 .brandMark {
   width: 50px;
   height: 50px;
@@ -1545,21 +1514,25 @@ onBeforeUnmount(() => {
   box-shadow: 0 18px 42px rgba(56, 189, 248, 0.12);
   border: 1px solid rgb(255, 255, 255);
 }
+
 .brandName {
   font-weight: 900;
   letter-spacing: 0.2px;
 }
+
 .brandSub {
   font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
 }
+
 .nav {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-top: 6px;
 }
+
 .navItem {
   text-decoration: none;
   position: relative;
@@ -1575,18 +1548,21 @@ onBeforeUnmount(() => {
   transition: background 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
   will-change: transform;
 }
+
 .navItem:hover {
   background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.92);
   border-color: rgba(56, 189, 248, 0.22);
   box-shadow: 0 12px 30px rgba(56, 189, 248, 0.1);
 }
+
 .navItem.active {
   background: linear-gradient(90deg, rgba(56, 189, 248, 0.22), rgba(99, 102, 241, 0.14));
   border-color: rgba(56, 189, 248, 0.24);
   color: rgba(255, 255, 255, 0.95);
   box-shadow: 0 18px 40px rgba(56, 189, 248, 0.12);
 }
+
 .navIcon {
   width: 22px;
   height: 22px;
@@ -1594,9 +1570,11 @@ onBeforeUnmount(() => {
   place-items: center;
   color: rgba(255, 255, 255, 0.9);
 }
+
 .navLabel {
   font-weight: 800;
 }
+
 .navPill {
   position: absolute;
   right: 10px;
@@ -1607,13 +1585,16 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: rgba(56, 189, 248, 0);
 }
+
 .navItem.active .navPill {
   background: rgba(56, 189, 248, 0.95);
   box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.14);
 }
+
 .spacer {
   flex: 1;
 }
+
 .logout {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
@@ -1635,6 +1616,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 10px;
 }
+
 .topbar {
   display: grid;
   grid-template-columns: 1fr 380px 280px;
@@ -1642,15 +1624,18 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 10px 6px 10px;
 }
+
 .hello {
   font-size: 13px;
   color: var(--muted);
 }
+
 .name {
   font-size: 22px;
   font-weight: 950;
   letter-spacing: 0.2px;
 }
+
 .searchWrap {
   display: flex;
   align-items: center;
@@ -1660,13 +1645,16 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   padding: 10px 12px;
 }
+
 .searchWrap:focus-within {
   border-color: rgba(56, 189, 248, 0.25);
   box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.08);
 }
+
 .searchIcon {
   color: rgba(255, 255, 255, 0.58);
 }
+
 .search {
   width: 100%;
   border: 0;
@@ -1675,12 +1663,14 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
 }
+
 .topActions {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
 }
+
 .iconBtn {
   position: relative;
   width: 40px;
@@ -1694,12 +1684,14 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.86);
   will-change: transform;
 }
+
 .profile {
   display: flex;
   align-items: center;
   gap: 10px;
   padding-left: 6px;
 }
+
 .avatar {
   width: 40px;
   height: 40px;
@@ -1710,23 +1702,28 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(56, 189, 248, 0.14));
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
 .profileName {
   font-weight: 850;
   font-size: 13px;
 }
+
 .profileRole {
   font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
 }
+
 .mainBody {
   flex: 1;
   overflow: auto;
   padding-right: 6px;
 }
+
 .mainBody::-webkit-scrollbar {
   width: 10px;
 }
+
 .mainBody::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 999px;
@@ -1737,6 +1734,7 @@ onBeforeUnmount(() => {
   padding: 6px 6px 18px;
   color: var(--txt);
 }
+
 .pageTop {
   display: flex;
   align-items: flex-end;
@@ -1744,26 +1742,31 @@ onBeforeUnmount(() => {
   gap: 14px;
   margin-bottom: 12px;
 }
+
 .pageTitle {
   font-size: 20px;
   font-weight: 950;
   letter-spacing: 0.2px;
 }
+
 .pageSub {
   margin-top: 4px;
   font-size: 12px;
   color: var(--muted);
 }
+
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   color: rgba(255, 255, 255, 0.78);
 }
+
 .actions {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 520px;
 }
+
 .filterWrap {
   width: 360px;
   display: flex;
@@ -1774,13 +1777,16 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   padding: 10px 12px;
 }
+
 .filterWrap:focus-within {
   border-color: rgba(56, 189, 248, 0.22);
   box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.07);
 }
+
 .filterIcon {
   color: rgba(255, 255, 255, 0.55);
 }
+
 .filterSelect {
   width: 160px;
   border: 0;
@@ -1789,6 +1795,7 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.84);
   font-weight: 850;
 }
+
 .filterInput {
   flex: 1;
   border: 0;
@@ -1797,6 +1804,7 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
 }
+
 .ghostBtn {
   height: 40px;
   padding: 0 12px;
@@ -1808,12 +1816,14 @@ onBeforeUnmount(() => {
   cursor: pointer;
   will-change: transform;
 }
+
 .metaRow {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 12px;
 }
+
 .metaPill {
   display: inline-flex;
   align-items: center;
@@ -1825,10 +1835,12 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.78);
   font-weight: 850;
 }
+
 .errorPill {
   border-color: rgba(239, 68, 68, 0.25);
   color: rgba(239, 68, 68, 0.95);
 }
+
 .spinner {
   width: 14px;
   height: 14px;
@@ -1837,6 +1849,7 @@ onBeforeUnmount(() => {
   border-top-color: rgba(56, 189, 248, 0.7);
   animation: spin 0.85s linear infinite;
 }
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -1850,8 +1863,10 @@ onBeforeUnmount(() => {
   border: 1px solid var(--stroke);
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(12px);
-  position: relative; /* ✅ for sheen */
+  position: relative;
+  /* ✅ for sheen */
 }
+
 .tableWrap::before {
   content: "";
   position: absolute;
@@ -1863,10 +1878,12 @@ onBeforeUnmount(() => {
   opacity: 0.18;
   mix-blend-mode: screen;
 }
+
 .table {
   width: 100%;
   border-collapse: collapse;
 }
+
 .th {
   color: rgba(255, 255, 255, 0.8);
   font-weight: 950;
@@ -1874,18 +1891,22 @@ onBeforeUnmount(() => {
   user-select: none;
   cursor: pointer;
 }
+
 .tr {
   cursor: pointer;
   transition: background 160ms ease;
   will-change: transform;
 }
+
 .tr:hover {
   background: rgba(255, 255, 255, 0.03);
 }
+
 .td {
   color: rgba(255, 255, 255, 0.86);
   font-weight: 800;
 }
+
 .empty {
   padding: 18px;
   text-align: center;
@@ -1898,6 +1919,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 8px;
 }
+
 .thumbMini {
   width: 56px;
   height: 56px;
@@ -1920,6 +1942,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   z-index: 9999;
 }
+
 .modal {
   width: min(980px, 96vw);
   max-height: 92vh;
@@ -1930,6 +1953,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--stroke);
   box-shadow: 0 26px 80px rgba(0, 0, 0, 0.55);
 }
+
 .modalGlow {
   position: absolute;
   inset: -2px;
@@ -1939,6 +1963,7 @@ onBeforeUnmount(() => {
   opacity: 0.9;
   filter: blur(16px);
 }
+
 .modalTop {
   display: flex;
   align-items: center;
@@ -1949,6 +1974,7 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 1;
 }
+
 .modalTitle {
   display: flex;
   align-items: center;
@@ -1957,6 +1983,7 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.92);
   font-size: 22px;
 }
+
 .modalBody {
   padding: 18px 18px 26px;
   overflow: auto;
@@ -1965,11 +1992,13 @@ onBeforeUnmount(() => {
   z-index: 1;
   scrollbar-gutter: stable;
 }
+
 .kvGrid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
 }
+
 .kv {
   display: grid;
   grid-template-columns: 1.2fr 2fr;
@@ -1979,6 +2008,7 @@ onBeforeUnmount(() => {
   background: var(--panel2);
   border: 1px solid var(--stroke);
 }
+
 .k {
   color: rgba(255, 255, 255, 0.62);
   font-weight: 950;
@@ -1987,6 +2017,7 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .v {
   color: rgba(255, 255, 255, 0.88);
   font-weight: 850;
@@ -2004,6 +2035,7 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
 }
+
 .mediaTop {
   display: flex;
   align-items: center;
@@ -2011,22 +2043,26 @@ onBeforeUnmount(() => {
   gap: 10px;
   margin-bottom: 12px;
 }
+
 .mediaTitle {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   font-weight: 950;
 }
+
 .mediaHint {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.62);
   font-weight: 850;
 }
+
 .mediaGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
+
 .mediaItem {
   position: relative;
   border-radius: 16px;
@@ -2037,15 +2073,18 @@ onBeforeUnmount(() => {
   cursor: pointer;
   padding: 0;
 }
+
 .mediaItem.hero {
   grid-column: span 2;
   aspect-ratio: 2 / 1;
 }
+
 .mediaItem img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .mediaTag {
   position: absolute;
   left: 10px;
@@ -2142,6 +2181,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   padding: clamp(14px, 3vw, 34px);
 }
+
 .imgModal {
   width: min(1100px, 98vw);
   max-height: 92vh;
@@ -2152,6 +2192,7 @@ onBeforeUnmount(() => {
   background: rgba(0, 0, 0, 0.22);
   box-shadow: 0 26px 80px rgba(0, 0, 0, 0.55);
 }
+
 .imgClose {
   position: absolute;
   top: 12px;
@@ -2167,6 +2208,7 @@ onBeforeUnmount(() => {
   place-items: center;
   z-index: 1;
 }
+
 .imgFull {
   width: 100%;
   height: 92vh;
@@ -2185,6 +2227,7 @@ onBeforeUnmount(() => {
   place-items: center;
   padding: 20px;
 }
+
 .confirmCard {
   width: min(520px, 95vw);
   border-radius: 22px;
@@ -2195,21 +2238,21 @@ onBeforeUnmount(() => {
   position: relative;
   overflow: hidden;
 }
+
 .confirmCard::before {
   content: "";
   position: absolute;
   inset: -2px;
-  background: linear-gradient(
-    90deg,
-    rgba(239, 68, 68, 0.35),
-    rgba(99, 102, 241, 0.22),
-    rgba(56, 189, 248, 0.18),
-    rgba(239, 68, 68, 0.35)
-  );
+  background: linear-gradient(90deg,
+      rgba(239, 68, 68, 0.35),
+      rgba(99, 102, 241, 0.22),
+      rgba(56, 189, 248, 0.18),
+      rgba(239, 68, 68, 0.35));
   opacity: 0.18;
   filter: blur(16px);
   pointer-events: none;
 }
+
 .confirmIcon {
   width: 92px;
   height: 92px;
@@ -2219,6 +2262,7 @@ onBeforeUnmount(() => {
   place-items: center;
   position: relative;
 }
+
 .skull {
   width: 62px;
   height: 62px;
@@ -2231,10 +2275,12 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
 }
+
 .skull i {
   font-size: 22px;
   color: rgba(239, 68, 68, 0.95);
 }
+
 .ring {
   position: absolute;
   border-radius: 999px;
@@ -2243,25 +2289,30 @@ onBeforeUnmount(() => {
   z-index: 1;
   animation: pulse 1.9s ease-in-out infinite;
 }
+
 .ringB {
   inset: -10px;
   opacity: 0.55;
   animation-delay: 0.35s;
 }
+
 @keyframes pulse {
   0% {
     transform: scale(0.96);
     opacity: 0.55;
   }
+
   60% {
     transform: scale(1.05);
     opacity: 0.18;
   }
+
   100% {
     transform: scale(0.96);
     opacity: 0.55;
   }
 }
+
 .confirmTitle {
   text-align: center;
   font-weight: 950;
@@ -2270,6 +2321,7 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
 }
+
 .confirmText {
   margin-top: 8px;
   text-align: center;
@@ -2279,16 +2331,19 @@ onBeforeUnmount(() => {
   z-index: 2;
   line-height: 1.5;
 }
+
 .confirmName {
   display: inline-block;
   margin-left: 6px;
   color: rgba(255, 255, 255, 0.92);
 }
+
 .confirmHint {
   margin-top: 8px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.58);
 }
+
 .confirmActions {
   margin-top: 14px;
   display: flex;
@@ -2297,6 +2352,7 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
 }
+
 .cBtn {
   height: 42px;
   padding: 0 14px;
@@ -2310,17 +2366,21 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
 }
+
 .cBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
 .cBtn.ghost:hover {
   border-color: rgba(56, 189, 248, 0.18);
 }
+
 .cBtn.danger {
   border-color: rgba(239, 68, 68, 0.28);
   background: rgba(239, 68, 68, 0.12);
 }
+
 .cBtn.danger:hover {
   border-color: rgba(239, 68, 68, 0.5);
 }
@@ -2330,6 +2390,7 @@ onBeforeUnmount(() => {
   border-color: rgba(56, 189, 248, 0.28);
   background: rgba(56, 189, 248, 0.12);
 }
+
 .cBtn.primary:hover {
   border-color: rgba(56, 189, 248, 0.52);
 }
@@ -2345,23 +2406,24 @@ onBeforeUnmount(() => {
 
 /* ✅ Edit confirm theme (blue) */
 .confirmCard.edit::before {
-  background: linear-gradient(
-    90deg,
-    rgba(56, 189, 248, 0.3),
-    rgba(99, 102, 241, 0.18),
-    rgba(14, 165, 233, 0.16),
-    rgba(56, 189, 248, 0.3)
-  );
+  background: linear-gradient(90deg,
+      rgba(56, 189, 248, 0.3),
+      rgba(99, 102, 241, 0.18),
+      rgba(14, 165, 233, 0.16),
+      rgba(56, 189, 248, 0.3));
   opacity: 0.18;
 }
+
 .confirmCard.edit .skull {
   background: rgba(56, 189, 248, 0.16);
   border: 1px solid rgba(56, 189, 248, 0.22);
   box-shadow: 0 18px 44px rgba(56, 189, 248, 0.14);
 }
+
 .confirmCard.edit .skull i {
   color: rgba(56, 189, 248, 0.95);
 }
+
 .confirmCard.edit .ring {
   border: 1px solid rgba(56, 189, 248, 0.22);
 }
@@ -2384,28 +2446,35 @@ onBeforeUnmount(() => {
   font-weight: 950;
   animation: toastIn 0.24s ease-out;
 }
+
 @keyframes toastIn {
   from {
     transform: translateY(8px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
   }
 }
+
 .toast.success {
   border-color: rgba(34, 197, 94, 0.22);
 }
+
 .toast.success i {
   color: rgba(34, 197, 94, 0.95);
 }
+
 .toast.error {
   border-color: rgba(239, 68, 68, 0.25);
 }
+
 .toast.error i {
   color: rgba(239, 68, 68, 0.95);
 }
+
 .toastText {
   color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
@@ -2415,55 +2484,69 @@ onBeforeUnmount(() => {
   .app.tech {
     grid-template-columns: 86px 1fr;
   }
+
   .brandText,
   .navLabel,
   .profileText {
     display: none;
   }
+
   .topbar {
     grid-template-columns: 1fr 1fr 160px;
   }
 }
+
 @media (max-width: 920px) {
   .topbar {
     grid-template-columns: 1fr 1fr;
   }
+
   .topActions {
     justify-content: flex-start;
   }
+
   .actions {
     min-width: 0;
     width: 100%;
     flex-wrap: wrap;
     justify-content: flex-end;
   }
+
   .filterWrap {
     width: 100%;
   }
+
   .kv {
     grid-template-columns: 1fr;
   }
+
   .mediaGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
   .mediaItem.hero {
     grid-column: span 2;
   }
+
   .colWide {
     width: auto;
     max-width: none;
   }
+
   .tdLast {
     width: 100%;
   }
 }
+
 @media (max-width: 520px) {
   .overlay {
     padding: 12px;
   }
+
   .modalTop {
     padding: 14px 14px;
   }
+
   .modalBody {
     padding: 14px 14px 20px;
     max-height: calc(92vh - 64px);

@@ -90,7 +90,7 @@
               </label>
 
               <label class="label">
-                <span>Header</span>
+                <span>ຫົວຂໍ້ຂ່າວສານ</span>
                 <div class="inputWrap">
                   <i class="fa-solid fa-heading"></i>
                   <input v-model.trim="form.title" class="inp" type="text" placeholder="News header..." />
@@ -101,7 +101,7 @@
 
             <div class="row">
               <label class="label">
-                <span>Category</span>
+                <span>ໝວດໝູ່</span>
                 <div class="inputWrap">
                   <i class="fa-solid fa-list"></i>
                   <select v-model="form.category" class="inp select">
@@ -114,7 +114,7 @@
 
               <!-- Date -->
               <label class="label">
-                <span>Date</span>
+                <span>ວັນທີຂ່າວສານ</span>
                 <div class="inputWrap">
                   <i class="fa-regular fa-calendar"></i>
                   <input ref="dateEl" class="inp" type="text" placeholder="Select date..." />
@@ -125,7 +125,7 @@
 
             <div class="row">
               <label class="label">
-                <span>Timestamp (Auto)</span>
+                <span>ວັນທີເພີ່ມຂ່າວ (Auto)</span>
                 <div class="inputWrap readonly">
                   <i class="fa-regular fa-clock"></i>
                   <input class="inp" type="text" :value="form.timestamp" readonly />
@@ -133,7 +133,7 @@
               </label>
 
               <label class="label">
-                <span>Sub header (optional)</span>
+                <span>ຫົວຂໍ້ຍ່ອຍ (ຖ້າມີ)</span>
                 <div class="inputWrap">
                   <i class="fa-solid fa-link"></i>
                   <input v-model.trim="form.slug" class="inp" type="text" placeholder="Sub header..." />
@@ -194,7 +194,7 @@
 
             <!-- Content -->
             <div class="label">
-              <span>Content</span>
+              <span>ເນື້ອໃນຂ່າວສານ</span>
               <div class="textareaWrap js-reveal">
                 <i class="fa-regular fa-pen-to-square"></i>
                 <textarea v-model.trim="form.content" class="textarea" rows="8" placeholder="Write news content..."></textarea>
@@ -204,13 +204,13 @@
 
             <!-- Main Image -->
             <div class="label">
-              <span>Main image (hero_img)</span>
+              <span>ຮູບພາບຫຼັກຂອງຂ່າວສານ</span>
 
               <div class="imgPanel js-reveal">
                 <div class="imgPanelTop">
                   <div class="imgPanelTitle">
                     <i class="fa-solid fa-image"></i>
-                    Main image
+                    Cover image
                     <span v-if="isOptimizingMain" class="busyPill">
                       <i class="fa-solid fa-spinner fa-spin"></i> Optimizing...
                     </span>
@@ -257,7 +257,7 @@
 
             <!-- Gallery -->
             <div class="label">
-              <span>Gallery images (optional)</span>
+              <span>Gallery images (ຖ້າມີ)</span>
 
               <div
                 ref="galleryDropEl"
@@ -491,8 +491,8 @@ const navItems = [
   { key: "news", label: "ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ", to: "/newinsert", icon: "fa-solid fa-newspaper" },
   { key: "joblist", label: "ປະກາດຮັບສະມັກພະນັກງານ", to: "/joblist", icon: "fa-solid fa-user-plus" },
   { key: "announcement", label: "ປະກາດ", to: "/announcement", icon: "fa-solid fa-bullhorn" },
-  { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", icon: "fa-solid fa-people-group" },
-  { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", icon: "fa-solid fa-users-rectangle" },
+  // { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", icon: "fa-solid fa-people-group" },
+  // { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", icon: "fa-solid fa-users-rectangle" },
 ];
 
 const categories = ["Meeting", "Contract Signing", "Announcement", "Activity", "Launch Event", "Event"];

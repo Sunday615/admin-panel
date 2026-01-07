@@ -112,8 +112,9 @@
           <div class="metaRow js-reveal">
             <div class="metaPill">
               <i class="fa-solid fa-database"></i>
-              <span>Total:</span>
+              <span>ທະນາຄານສະມາຊິກທັງໝົດ:</span>
               <b>{{ members.length }}</b>
+              <span>ທະນາຄານ</span>
             </div>
 
             <div class="metaPill" v-if="loading">
@@ -128,9 +129,18 @@
 
             <div class="metaPill" v-else>
               <i class="fa-solid fa-list"></i>
-              <span>Filtered:</span>
+              <span>ຄົ້ນຫາພົບ :</span>
               <b>{{ rows.length }}</b>
+              <span>ທະນາຄານ</span>
             </div>
+            <router-link to="/memberinsert">
+            <div class="metaPill" id="add_member">
+             <i class="fa-solid fa-plus"></i>
+              <span>ເພີ່ມທະນາຄານສະມາຊິກ</span>
+              <b></b>
+            </div>
+            </router-link>
+            
           </div>
 
           <!-- Table -->
@@ -481,8 +491,8 @@ const navItems = [
   { key: "news", label: "ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ", to: "/newinsert", fa: "fa-solid fa-newspaper" },
   { key: "protocols", label: "ປະກາດຮັບສະມັກພະນັກງານ", to: "/joblist", fa: "fa-solid fa-user-plus" },
   { key: "announcement", label: "ປະກາດ", to: "/announcement", fa: "fa-solid fa-bullhorn" },
-  { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", fa: "fa-solid fa-people-group" },
-  { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", fa: "fa-solid fa-users-rectangle" },
+  // { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", fa: "fa-solid fa-people-group" },
+  // { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", fa: "fa-solid fa-users-rectangle" },
 ];
 
 /* =========================
@@ -1550,7 +1560,13 @@ onBeforeUnmount(() => {
 * {
   box-sizing: border-box;
 }
-
+#add_member{
+ background-color: #28a475;
+}
+#add_member:hover{
+ background-color: #1e6f56;
+ transition: background-color 0.3s ease;
+}
 .app.tech {
   --bg0: #050914;
   --bg1: #070e23;
