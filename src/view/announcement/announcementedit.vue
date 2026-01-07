@@ -1,4 +1,4 @@
-<!-- AnnouncementInsert.vue (UPDATED: Create + Edit (Upsert) + image upload + existing image preview) -->
+<!-- AnnouncementEdit.vue (UPDATED: load timeforshow/linkpath, send both range+timeforshow & link+linkpath) -->
 <template>
   <div class="page tech">
     <div class="glow glow-a"></div>
@@ -7,7 +7,7 @@
     <main class="layout">
       <!-- Sidebar -->
       <aside ref="sideEl" class="sidebar js-side">
-        <router-link to="/" style="text-decoration: none;">
+        <router-link to="/" style="text-decoration: none">
           <div class="brand js-reveal">
             <div class="brandMark">
               <img src="/logolapnet/fullcircle.png" alt="" style="width: 100%; height: 100%" />
@@ -62,21 +62,13 @@
               <i class="fa-solid fa-arrow-left"></i>
             </button>
             <div>
-              <div class="title">{{ isEditMode ? "Edit Announcement" : "Create Announcement" }}</div>
-              <div class="sub">
-                {{ isEditMode ? "ແກ້ໄຂແຈ້ງການຂອງບໍລິສັດ" : "ເພີ່ມແຈ້ງການຂອງບໍລິສັດ" }}
-              </div>
-
-              <div v-if="isEditMode" class="sub" style="margin-top:6px">
-                Editing ID: <span class="mono">{{ announcementId }}</span>
-              </div>
+              <div class="title">Edit Announcement</div>
+              <div class="sub">ແກ້ໄຂແຈ້ງການຂອງບໍລິສັດ</div>
             </div>
           </div>
 
           <div class="headRight js-reveal">
-            <span class="pill">
-              <i class="fa-solid fa-shield-halved"></i> Admin
-            </span>
+            <span class="pill"><i class="fa-solid fa-shield-halved"></i> Admin</span>
           </div>
         </header>
 
@@ -84,9 +76,12 @@
           <div class="cardTop">
             <div class="cardTitle">
               <i class="fa-solid fa-bullhorn"></i>
-              {{ isEditMode ? "Update Announcement Information" : "Announcement Information" }}
+              Edit Announcement Information
             </div>
-            <div class="cardHint"></div>
+
+            <div class="cardHint">
+              <span v-if="displayNo" style="opacity: 0.85">No of Announcement: {{ displayNo }}</span>
+            </div>
           </div>
 
           <form class="form" @submit.prevent="onSubmit">
@@ -121,7 +116,7 @@
 
             <div class="divider"></div>
 
-            <!-- ✅ Range + Link -->
+            <!-- Range + Link -->
             <div class="sectionTitle js-reveal">
               <i class="fa-solid fa-sliders"></i> Range + Link
             </div>
@@ -172,7 +167,7 @@
               </label>
 
               <label class="label">
-                <span>Timestamp (Auto)</span>
+                <span>Timestamp</span>
                 <div class="inputWrap readonly">
                   <i class="fa-regular fa-clock"></i>
                   <input class="inp" type="text" :value="timestamp" readonly />
@@ -191,41 +186,27 @@
               <div class="imgPanelTop">
                 <div class="imgPanelTitle">
                   <i class="fa-solid fa-image"></i>
-                  {{ isEditMode ? "Update announcement image" : "Upload announcement image" }}
+                  Update announcement image
                 </div>
 
-                <div style="display:flex; gap:8px; align-items:center;">
-                  <button
-                    v-if="(imagePreview || existingImageUrl) && !saving"
-                    class="miniBtn"
-                    type="button"
-                    @click="clearImage"
-                    @mouseenter="btnHover($event, true)"
-                    @mouseleave="btnHover($event, false)"
-                    :title="isEditMode ? 'Remove selected/new image or remove existing preview' : 'Remove image'"
-                  >
-                    <i class="fa-solid fa-trash"></i> Remove
-                  </button>
-                </div>
+                <button
+                  v-if="imagePreview || (existing.imageRel && !imageRemoved)"
+                  class="miniBtn"
+                  type="button"
+                  @click="clearImage"
+                  @mouseenter="btnHover($event, true)"
+                  @mouseleave="btnHover($event, false)"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                  Remove / Clear
+                </button>
               </div>
 
-              <!-- hidden file input -->
               <input ref="fileEl" class="fileHidden" type="file" accept="image/*" @change="onPickFile" />
 
-              <!-- Preview Card -->
               <div class="previewCard">
                 <div class="imgBox clickable" @click="triggerPickImage" title="Click to upload">
-                  <img
-                    v-if="imagePreview"
-                    :src="imagePreview"
-                    alt="announcement preview"
-                  />
-                  <img
-                    v-else-if="existingImageUrl && !removeExistingImage"
-                    :src="existingImageUrl"
-                    alt="existing announcement"
-                    @error="existingImageUrl = ''"
-                  />
+                  <img v-if="imagePreview" :src="imagePreview" alt="announcement preview" />
                   <div v-else class="imgEmpty">
                     <i class="fa-regular fa-image"></i>
                     <div>No image</div>
@@ -255,20 +236,16 @@
 
                     <span class="timePill">
                       <i class="fa-solid fa-image"></i>
-                      <template v-if="form.image">
-                        {{ form.image.name }}
-                      </template>
-                      <template v-else-if="existingImageUrl && !removeExistingImage">
-                        Using existing image
-                      </template>
-                      <template v-else>
-                        No file selected
-                      </template>
+                      {{ imageNameLabel }}
                     </span>
                   </div>
 
-                  <div v-if="isEditMode && removeExistingImage" class="err" style="margin-top: 10px">
-                    Existing image will be removed (if backend supports it). You can also upload a new one.
+                  <div
+                    v-if="imageRemoved && !form.image"
+                    class="pSub"
+                    style="margin-top: 8px; color: rgba(248,113,113,0.9); font-weight: 800"
+                  >
+                    Image will be removed (unless you upload a new one).
                   </div>
 
                   <div v-if="errors.image" class="err" style="margin-top: 10px">{{ errors.image }}</div>
@@ -277,7 +254,6 @@
               </div>
             </div>
 
-            <!-- Actions -->
             <div ref="actionsEl" class="actions js-reveal">
               <button
                 class="btn ghost"
@@ -299,7 +275,7 @@
               >
                 <i v-if="!saving" class="fa-solid fa-floppy-disk"></i>
                 <span v-else class="miniSpin"></span>
-                {{ saving ? "Saving..." : (isEditMode ? "Update Announcement" : "Save Announcement") }}
+                {{ saving ? "Updating..." : "Update Announcement" }}
               </button>
             </div>
           </form>
@@ -307,7 +283,6 @@
       </section>
     </main>
 
-    <!-- ✅ TECH OVERLAY ALERT (NO AUTO REDIRECT) -->
     <Teleport to="body">
       <div v-if="overlay.show" ref="overlayEl" class="ov" :class="overlay.type" @click.self="closeOverlay">
         <div ref="ovCardEl" class="ovCard">
@@ -386,15 +361,36 @@ const cardEl = ref(null);
 const actionsEl = ref(null);
 const fileEl = ref(null);
 
-/* ✅ Overlay refs */
 const overlayEl = ref(null);
 const ovCardEl = ref(null);
 let prevBodyOverflow = "";
 
-/* ✅ Overlay state (NO countdown / NO auto redirect) */
+/** ✅ API */
+const API_URL = "http://localhost:3000/api/announcement";
+const API_BASE = "http://localhost:3000";
+
+const navItems = [
+  { key: "dashboard", label: "ພາບລວມ", to: "/dashboard", icon: "fa-solid fa-chart-line" },
+  { key: "member", label: "ເພີ່ມທະນາຄານສະມາຊິກ", to: "/memberinsert", icon: "fa-solid fa-building-columns" },
+  { key: "news", label: "ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ", to: "/newinsert", icon: "fa-solid fa-newspaper" },
+  { key: "joblist", label: "ປະກາດຮັບສະມັກພະນັກງານ", to: "/joblist", icon: "fa-solid fa-user-plus" },
+  { key: "announcement", label: "ປະກາດ", to: "/announcement", icon: "fa-solid fa-bullhorn" },
+  { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", icon: "fa-solid fa-people-group" },
+  { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", icon: "fa-solid fa-users-rectangle" },
+];
+
+const editId = computed(() => {
+  const raw = route.query?.id ?? route.params?.id;
+  if (raw === null || raw === undefined) return null;
+  const s = String(raw).trim();
+  if (!s) return null;
+  return s;
+});
+
+/** Overlay state */
 const overlay = reactive({
   show: false,
-  type: "success", // success | error
+  type: "success",
   title: "",
   message: "",
   nextRoute: "/announcementviewer",
@@ -453,13 +449,10 @@ async function goOverlay() {
     onComplete: async () => {
       overlay.show = false;
       lockScroll(false);
-
       if (go && go !== route.fullPath) {
         try {
           await router.push(go);
-        } catch {
-          // ignore
-        }
+        } catch {}
       }
     },
   });
@@ -472,29 +465,7 @@ function onKey(e) {
   if (e.key === "Escape" && overlay.show) closeOverlay();
 }
 
-/**
- * ✅ API config
- * - แนะนำ: ตั้ง VITE_API_ORIGIN เช่น http://localhost:3000 หรือ http://192.168.x.x:3000
- */
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:3000";
-const API_URL = `${API_ORIGIN}/api/announcement`;
-const API_BASE = API_ORIGIN;
-
-const navItems = [
-  { key: "dashboard", label: "ພາບລວມ", to: "/dashboard", icon: "fa-solid fa-chart-line" },
-  { key: "member", label: "ເພີ່ມທະນາຄານສະມາຊິກ", to: "/memberinsert", icon: "fa-solid fa-building-columns" },
-  { key: "news", label: "ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ", to: "/newinsert", icon: "fa-solid fa-newspaper" },
-  { key: "joblist", label: "ປະກາດຮັບສະມັກພະນັກງານ", to: "/joblist", icon: "fa-solid fa-user-plus" },
-  { key: "announcement", label: "ປະກາດ", to: "/announcement", icon: "fa-solid fa-bullhorn" },
-  { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", icon: "fa-solid fa-people-group" },
-  { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", icon: "fa-solid fa-users-rectangle" },
-];
-
-/* ✅ edit mode by query (?id=) or params (:id) */
-const announcementId = computed(() => String(route.query?.id ?? route.params?.id ?? "").trim());
-const isEditMode = computed(() => !!announcementId.value);
-
-/* ✅ timestamp helpers */
+/** Timestamp helpers */
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
@@ -504,23 +475,16 @@ function nowTimestamp() {
     d.getMinutes()
   )}:${pad2(d.getSeconds())}`;
 }
-
-// ✅ timestamp state (ref) + auto update each second
 const timestamp = ref(nowTimestamp());
-let tsTimer = null;
 
-function refreshTimestamp() {
-  timestamp.value = nowTimestamp();
-}
-
-/* ✅ form state */
+/** Form state */
 const form = reactive({
   title: "",
   description: "",
   active: 1,
   range: 3,
   link: "",
-  image: null, // File
+  image: null,
 });
 
 const errors = reactive({
@@ -533,23 +497,35 @@ const errors = reactive({
 
 const saving = ref(false);
 
-/* ✅ image preview state */
-const imagePreview = ref("");      // new selected file preview (object url)
+/** existing server state */
+const existing = reactive({
+  announcementNo: null,
+  imageRel: "",
+  imageUrl: "",
+  loaded: false,
+});
+
+const imageRemoved = ref(false);
+
+const imagePreview = ref("");
 let lastObjectUrl = "";
 
-const existingImageUrl = ref("");  // existing image from backend (absolute url)
-const removeExistingImage = ref(false); // optional signal (backend must support)
+/** show no */
+const displayNo = computed(() => {
+  return existing.announcementNo ?? editId.value;
+});
 
-/* helpers */
 function goBack() {
   router.back();
 }
+
 function setError(key, msg) {
   errors[key] = msg || "";
 }
+
 function isValidUrlMaybe(v) {
   const s = String(v || "").trim();
-  if (!s) return true; // optional
+  if (!s) return true;
   try {
     const u = new URL(s);
     return u.protocol === "http:" || u.protocol === "https:";
@@ -557,51 +533,16 @@ function isValidUrlMaybe(v) {
     return false;
   }
 }
-function normalizeImageUrl(p) {
-  const s = String(p || "").trim();
-  if (!s) return "";
-  if (/^data:image\//i.test(s)) return s;
-  if (/^https?:\/\//i.test(s)) return s;
-  if (s.startsWith("/")) return `${API_BASE}${s}`;
-  return `${API_BASE}/${s}`;
-}
 
-function pickImagePathFromResponse(data) {
-  if (!data || typeof data !== "object") return "";
-  return (
-    data.image_url ||
-    data.imageurl ||
-    data.imageUrl ||
-    data.imageURL ||
-    data.Image_url ||
-    data.ImageURL ||
-    data.Image ||
-    data.image ||
-    data.path ||
-    data.url ||
-    data.image_path ||
-    data.imagePath ||
-    (data.data &&
-      (data.data.image_url ||
-        data.data.imageurl ||
-        data.data.imageUrl ||
-        data.data.Image_url ||
-        data.data.Image ||
-        data.data.image ||
-        data.data.path ||
-        data.data.url)) ||
-    ""
-  );
-}
-
-function parseAnnouncementFromGetResponse(payload) {
-  // รองรับหลายรูปแบบ: {data:{...}} / {...} / {announcement:{...}}
-  if (!payload) return null;
-  if (payload?.data && typeof payload.data === "object") return payload.data;
-  if (payload?.announcement && typeof payload.announcement === "object") return payload.announcement;
-  if (typeof payload === "object") return payload;
-  return null;
-}
+const imageNameLabel = computed(() => {
+  if (form.image?.name) return form.image.name;
+  if (existing.imageRel && !imageRemoved.value) {
+    const name = String(existing.imageRel).replace(/\\/g, "/").split("/").pop();
+    return name || "Existing image";
+  }
+  if (imageRemoved.value) return "Removed";
+  return "No file selected";
+});
 
 function validate() {
   setError("title", form.title ? "" : "Title is required.");
@@ -611,136 +552,178 @@ function validate() {
 
   setError("link", isValidUrlMaybe(form.link) ? "" : "Link must be a valid URL (http/https).");
 
-  // ✅ image required only on CREATE
-  if (!isEditMode.value) {
-    setError("image", form.image ? "" : "Image is required.");
-  } else {
-    // on edit: ok if either existing image still there OR new image selected
-    const hasAny = !!form.image || (!!existingImageUrl.value && !removeExistingImage.value);
-    setError("image", hasAny ? "" : "Please upload an image (no existing image found).");
-  }
-
+  setError("image", "");
   setError("server", "");
+
   return !Object.values(errors).some(Boolean);
 }
 
-/* file pick */
 function triggerPickImage() {
   fileEl.value?.click();
 }
+
 function setPreviewFromFile(file) {
   if (!file) return;
   if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl);
   lastObjectUrl = URL.createObjectURL(file);
   imagePreview.value = lastObjectUrl;
 }
+
 function onPickFile(e) {
   const file = e.target.files?.[0];
   if (!file) return;
-
-  // choosing a new file cancels remove-existing
-  removeExistingImage.value = false;
-
   form.image = file;
+  imageRemoved.value = false;
   setPreviewFromFile(file);
   e.target.value = "";
 }
 
 function clearImage() {
-  // Clear selected new file preview
-  form.image = null;
-  imagePreview.value = "";
-  if (fileEl.value) fileEl.value.value = "";
   if (lastObjectUrl) {
     URL.revokeObjectURL(lastObjectUrl);
     lastObjectUrl = "";
   }
 
-  // If edit mode and had existing image, allow user to mark removal
-  if (isEditMode.value && existingImageUrl.value) {
-    removeExistingImage.value = true;
+  if (form.image) {
+    form.image = null;
+    if (existing.imageUrl && !imageRemoved.value) imagePreview.value = existing.imageUrl;
+    else imagePreview.value = "";
+    if (fileEl.value) fileEl.value.value = "";
+    return;
+  }
+
+  if (existing.imageRel) {
+    imageRemoved.value = true;
+  }
+
+  form.image = null;
+  imagePreview.value = "";
+  if (fileEl.value) fileEl.value.value = "";
+}
+
+function toAbsUrlMaybe(v) {
+  if (!v) return "";
+  let s = String(v).trim();
+  if (!s) return "";
+
+  if (/^data:image\//i.test(s)) return s;
+
+  s = s.replace(/\\/g, "/");
+
+  const lower = s.toLowerCase();
+  const idx = lower.lastIndexOf("/uploads/");
+  if (idx !== -1) s = s.slice(idx);
+
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.startsWith("/")) return `${API_BASE}${s}`;
+  return `${API_BASE}/${s}`;
+}
+
+async function safeReadJson(res) {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+function extractDataFromResponse(j) {
+  if (!j) return null;
+  if (j.data) return j.data;
+  if (j.item) return j.item;
+  if (j.announcement) return j.announcement;
+  if (j.result) return j.result;
+  if (typeof j === "object" && !Array.isArray(j)) return j;
+  if (Array.isArray(j)) return j[0] || null;
+  return null;
+}
+
+async function loadForEdit(id) {
+  try {
+    setError("server", "");
+
+    const res = await fetch(`${API_URL}/${encodeURIComponent(String(id))}`);
+    if (!res.ok) throw new Error(`Failed to load announcement (HTTP ${res.status})`);
+
+    const j = await safeReadJson(res);
+    const data = extractDataFromResponse(j);
+    if (!data) throw new Error("Invalid server response");
+
+    form.title = String(data.title || "").trim();
+    form.description = String(data.description || "").trim();
+
+    form.active = Number(data.active) === 1 ? 1 : 0;
+
+    // ✅ FIX: backend uses timeforshow (not range)
+    const rr = Number(data.timeforshow ?? data.timeForShow ?? data.range ?? data.Range ?? data.hours);
+    form.range = [3, 7, 24].includes(rr) ? rr : 3;
+
+    // ✅ FIX: backend uses linkpath (not link)
+    form.link = String(data.linkpath ?? data.linkPath ?? data.link ?? "").trim();
+
+    timestamp.value = toSqlDatetime(data.time) || nowTimestamp();
+
+
+    const no =
+      data.announcementNo ?? data.announcement_no ?? data.no ?? data.No ?? data.ANNOUNCEMENT_NO ?? data.announce_no;
+    existing.announcementNo = no ?? null;
+
+    existing.imageRel = String(data.image || data.Image || data.image_path || "").trim();
+
+    // ✅ prefer server-provided image_url (already absolute)
+    existing.imageUrl =
+      String(data.image_url || data.imageUrl || "").trim() || toAbsUrlMaybe(existing.imageRel);
+
+    imageRemoved.value = false;
+    form.image = null;
+
+    if (existing.imageUrl) {
+      if (lastObjectUrl) {
+        URL.revokeObjectURL(lastObjectUrl);
+        lastObjectUrl = "";
+      }
+      imagePreview.value = existing.imageUrl;
+    } else {
+      imagePreview.value = "";
+    }
+
+    existing.loaded = true;
+  } catch (err) {
+    console.error("LOAD EDIT ERROR:", err);
+    setError("server", err?.message || "Failed to load announcement.");
+    showOverlay({
+      type: "error",
+      title: "Load failed",
+      message: err?.message || "Failed to load announcement.",
+    });
   }
 }
 
 function resetForm() {
-  form.title = "";
-  form.description = "";
-  form.active = 1;
-  form.range = 3;
-  form.link = "";
-
-  // reset image states
-  form.image = null;
-  imagePreview.value = "";
-  existingImageUrl.value = "";
-  removeExistingImage.value = false;
-
-  if (fileEl.value) fileEl.value.value = "";
-  if (lastObjectUrl) {
-    URL.revokeObjectURL(lastObjectUrl);
-    lastObjectUrl = "";
-  }
-
+  if (!editId.value) return;
+  loadForEdit(editId.value);
   Object.keys(errors).forEach((k) => (errors[k] = ""));
-  refreshTimestamp();
 }
 
-/* ✅ Load existing data when editing */
-async function fetchExistingAnnouncement() {
-  if (!isEditMode.value) return;
-
-  try {
-    setError("server", "");
-    const id = encodeURIComponent(announcementId.value);
-    const res = await fetch(`${API_URL}/${id}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const payload = await res.json().catch(() => null);
-    const row = parseAnnouncementFromGetResponse(payload);
-    if (!row) throw new Error("Invalid response from server");
-
-    // map fields
-    form.title = row.title ?? row.header ?? row.name ?? "";
-    form.description = row.description ?? row.detail ?? "";
-    form.active = Number(row.active ?? row.is_active ?? row.enabled ?? 1) === 1 ? 1 : 0;
-    form.range = Number(row.range ?? 3) || 3;
-    form.link = row.link ?? "";
-
-    // timestamp: show db time if exists, else now
-    timestamp.value = String(row.time || "").trim() || nowTimestamp();
-
-    // existing image
-    const imgPath =
-      row.image_url ||
-      row.imageurl ||
-      row.Image_url ||
-      row.Image ||
-      row.image ||
-      row.path ||
-      "";
-
-    existingImageUrl.value = normalizeImageUrl(imgPath);
-    removeExistingImage.value = false;
-
-    // clear new file
-    form.image = null;
-    imagePreview.value = "";
-    if (fileEl.value) fileEl.value.value = "";
-  } catch (err) {
-    console.error("fetchExistingAnnouncement failed:", err);
-    setError("server", err?.message || "Failed to load announcement for editing.");
-    showOverlay({
-      type: "error",
-      title: "Load failed",
-      message: err?.message || "Failed to load announcement for editing.",
-    });
+async function patchWithFallback(url, fd) {
+  let res = await fetch(url, { method: "PATCH", body: fd });
+  if (res.status === 405) {
+    res = await fetch(url, { method: "PUT", body: fd });
   }
+  return res;
 }
 
 async function onSubmit() {
   if (saving.value) return;
 
-  refreshTimestamp();
+  if (!editId.value) {
+    showOverlay({
+      type: "error",
+      title: "Invalid route",
+      message: "Missing id. Use /announcementedit?id=123",
+    });
+    return;
+  }
 
   if (!validate()) {
     gsap.fromTo(cardEl.value, { x: -6 }, { x: 0, duration: 0.35, ease: "elastic.out(1, 0.45)" });
@@ -754,34 +737,35 @@ async function onSubmit() {
     fd.append("title", form.title.trim());
     fd.append("description", (form.description || "").trim());
     fd.append("active", String(form.active));
-    fd.append("time", timestamp.value);
+    fd.append("time", toSqlDatetime(timestamp.value) || nowTimestamp());
+
+
+    // ✅ send BOTH (backend accepts both)
     fd.append("range", String(form.range));
+    fd.append("timeforshow", String(form.range));
+
+    // ✅ send BOTH (backend accepts both)
     fd.append("link", (form.link || "").trim());
+    fd.append("linkpath", (form.link || "").trim());
 
-    // ✅ optional: signal remove existing image (backend must support)
-    if (isEditMode.value && removeExistingImage.value) {
-      fd.append("remove_image", "1");
-    }
+ 
 
-    // ✅ upload only when user chose new file
     if (form.image) {
       fd.append("image", form.image);
+    } else if (imageRemoved.value) {
+      // ✅ backend fix will read this
+      fd.append("image_remove", "1");
     }
 
-    const url = isEditMode.value
-      ? `${API_URL}/${encodeURIComponent(announcementId.value)}`
-      : API_URL;
-
-    const method = isEditMode.value ? "PATCH" : "POST";
-
-    const res = await fetch(url, { method, body: fd });
+    const url = `${API_URL}/${encodeURIComponent(String(editId.value))}`;
+    const res = await patchWithFallback(url, fd);
 
     if (!res.ok) {
       let errMsg = `HTTP ${res.status}`;
-      try {
-        const j = await res.json();
-        errMsg = j?.message || j?.error || errMsg;
-      } catch {
+      const jj = await safeReadJson(res);
+      if (jj?.message) errMsg = jj.message;
+      else if (jj?.error) errMsg = jj.error;
+      else {
         try {
           const t = await res.text();
           if (t) errMsg = t;
@@ -790,54 +774,53 @@ async function onSubmit() {
       throw new Error(errMsg);
     }
 
-    const data = await res.json().catch(() => null);
+    const out = await safeReadJson(res);
+    const saved = extractDataFromResponse(out);
 
-    // ✅ best-effort: show what backend returned
-    const savedImagePath = pickImagePathFromResponse(data);
-    const savedImageUrl = normalizeImageUrl(savedImagePath);
+    if (saved) {
+      const no =
+        saved.announcementNo ??
+        saved.announcement_no ??
+        saved.no ??
+        saved.No ??
+        saved.ANNOUNCEMENT_NO ??
+        existing.announcementNo;
+      existing.announcementNo = no ?? existing.announcementNo;
 
-    // update existing image state after save
-    if (savedImageUrl) {
-      existingImageUrl.value = savedImageUrl;
-      removeExistingImage.value = false;
-    } else if (isEditMode.value && removeExistingImage.value) {
-      // if backend removed but didn't return url
-      existingImageUrl.value = "";
+      existing.imageRel = String(saved.image || saved.Image || saved.image_path || "").trim();
+
+      existing.imageUrl =
+        String(saved.image_url || saved.imageUrl || "").trim() || toAbsUrlMaybe(existing.imageRel);
+
+      imageRemoved.value = false;
+      form.image = null;
+
+      if (lastObjectUrl) {
+        URL.revokeObjectURL(lastObjectUrl);
+        lastObjectUrl = "";
+      }
+      imagePreview.value = existing.imageUrl || "";
     }
-
-    // clear new file preview after successful save
-    if (lastObjectUrl) {
-      URL.revokeObjectURL(lastObjectUrl);
-      lastObjectUrl = "";
-    }
-    form.image = null;
-    imagePreview.value = "";
-    if (fileEl.value) fileEl.value.value = "";
 
     gsap.to(actionsEl.value, { y: -2, duration: 0.18, yoyo: true, repeat: 1, ease: "power2.out" });
 
     showOverlay({
       type: "success",
-      title: isEditMode.value ? "ອັບເດດສຳເລັດ" : "ບັນທຶກສຳເລັດ",
+      title: "ອັບເດດສຳເລັດ",
       message:
-        (isEditMode.value ? "Update Announcement ສຳເລັດ ✅\n" : "ບັນທຶກ Announcement ສຳເລັດ ✅\n") +
-        (savedImageUrl ? `Image URL: ${savedImageUrl}\n` : "") +
+        "ອັບເດດ Announcement ສຳເລັດ ✅\n" +
+        (existing.imageUrl ? `Image URL: ${existing.imageUrl}\n` : "Image: (none)\n") +
         "ກົດປຸ່ມ “View All Announcement” ເພື່ອໄປຫນ້າລາຍການ",
       nextRoute: "/announcementviewer",
     });
-
-    // On CREATE: reset entire form
-    if (!isEditMode.value) {
-      resetForm();
-    }
   } catch (err) {
-    console.error("Save failed:", err);
-    const msg = err?.message || "Save failed. Please check API / backend response.";
+    console.error("Update failed:", err);
+    const msg = err?.message || "Update failed. Please check API_URL / backend response.";
     setError("server", msg);
 
     showOverlay({
       type: "error",
-      title: isEditMode.value ? "ອັບເດດບໍ່ສຳເລັດ" : "ບັນທຶກບໍ່ສຳເລັດ",
+      title: "ບໍ່ສຳເລັດ",
       message: msg,
     });
 
@@ -856,12 +839,40 @@ function navHover(e, enter) {
   if (el.classList.contains("active")) return;
   gsap.to(el, { x: enter ? 3 : 0, duration: 0.18, ease: "power2.out" });
 }
+function toSqlDatetime(v) {
+  const s = String(v || "").trim();
+  if (!s) return "";
+
+  // already correct
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(s)) return s;
+
+  // remove milliseconds like: 2026-01-07 10:22:33.000
+  const noMs = s.replace(/\.\d{1,3}$/, "");
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(noMs)) return noMs;
+
+  // ISO -> Date
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return "";
+
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(
+    d.getMinutes()
+  )}:${pad(d.getSeconds())}`;
+}
 
 onMounted(async () => {
   window.addEventListener("keydown", onKey);
 
-  refreshTimestamp();
-  tsTimer = setInterval(refreshTimestamp, 1000);
+  if (!editId.value) {
+    showOverlay({
+      type: "error",
+      title: "Invalid route",
+      message: "Missing id. Use /announcementedit?id=123",
+    });
+    return;
+  }
+
+  await loadForEdit(editId.value);
 
   gsap.set(".js-side", { opacity: 0, x: -18 });
   gsap.set(".js-sideItem", { opacity: 0, y: 10 });
@@ -873,21 +884,14 @@ onMounted(async () => {
     .to(".js-sideItem", { opacity: 1, y: 0, stagger: 0.06, duration: 0.42 }, 0.12)
     .to(".js-card", { opacity: 1, y: 0, scale: 1, duration: 0.55 }, 0.12)
     .to(".js-reveal", { opacity: 1, y: 0, stagger: 0.06, duration: 0.45 }, 0.18);
-
-  // ✅ if edit, fetch existing row
-  await fetchExistingAnnouncement();
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", onKey);
   if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl);
   lockScroll(false);
-
-  if (tsTimer) clearInterval(tsTimer);
-  tsTimer = null;
 });
 </script>
-
 <style scoped>
 /* =========================
    TECH THEME (DARK BLUE)
@@ -1122,10 +1126,6 @@ onBeforeUnmount(() => {
   margin-top: 4px;
   font-size: 13px;
   color: var(--muted);
-}
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  color: rgba(255, 255, 255, 0.78);
 }
 .backBtn {
   width: 42px;
@@ -1494,9 +1494,7 @@ onBeforeUnmount(() => {
   }
 }
 
-/* =========================
-   ✅ OVERLAY ALERT (BIG, MODERN)
-   ========================= */
+/* Overlay */
 .ov {
   position: fixed;
   inset: 0;
@@ -1507,7 +1505,6 @@ onBeforeUnmount(() => {
   background: rgba(5, 9, 20, 0.72);
   backdrop-filter: blur(12px);
 }
-
 .ovCard {
   width: min(980px, 96vw);
   border-radius: 22px;
@@ -1517,7 +1514,6 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 26px 90px rgba(0, 0, 0, 0.62);
 }
-
 .ovGlow {
   position: absolute;
   inset: -2px;
@@ -1525,13 +1521,11 @@ onBeforeUnmount(() => {
   opacity: 0.9;
   filter: blur(18px);
 }
-
 .ov.success .ovGlow {
   background: radial-gradient(circle at 18% 22%, rgba(56, 189, 248, 0.22), transparent 60%),
     radial-gradient(circle at 82% 26%, rgba(34, 197, 94, 0.18), transparent 62%),
     radial-gradient(circle at 70% 92%, rgba(99, 102, 241, 0.16), transparent 62%);
 }
-
 .ov.error .ovGlow {
   background: radial-gradient(circle at 18% 22%, rgba(248, 113, 113, 0.22), transparent 60%),
     radial-gradient(circle at 82% 26%, rgba(99, 102, 241, 0.16), transparent 62%),
@@ -1548,7 +1542,6 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 1;
 }
-
 .ovIcon {
   width: 46px;
   height: 46px;
@@ -1560,12 +1553,10 @@ onBeforeUnmount(() => {
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
   font-size: 20px;
 }
-
 .ov.success .ovIcon {
   border-color: rgba(56, 189, 248, 0.3);
   box-shadow: 0 18px 44px rgba(56, 189, 248, 0.12);
 }
-
 .ov.error .ovIcon {
   border-color: rgba(248, 113, 113, 0.28);
   box-shadow: 0 18px 44px rgba(248, 113, 113, 0.12);
@@ -1574,14 +1565,12 @@ onBeforeUnmount(() => {
 .ovHead {
   min-width: 0;
 }
-
 .ovTitle {
   font-size: 18px;
   font-weight: 950;
   letter-spacing: 0.2px;
   color: rgba(255, 255, 255, 0.94);
 }
-
 .ovSub {
   margin-top: 6px;
   display: flex;
@@ -1591,7 +1580,6 @@ onBeforeUnmount(() => {
   font-size: 12px;
   font-weight: 800;
 }
-
 .ovTag {
   display: inline-flex;
   align-items: center;
@@ -1601,14 +1589,12 @@ onBeforeUnmount(() => {
   background: rgba(0, 0, 0, 0.18);
   letter-spacing: 0.4px;
 }
-
 .ovDot {
   width: 6px;
   height: 6px;
   border-radius: 99px;
   background: rgba(255, 255, 255, 0.35);
 }
-
 .ovX {
   width: 42px;
   height: 42px;
@@ -1620,13 +1606,11 @@ onBeforeUnmount(() => {
   display: grid;
   place-items: center;
 }
-
 .ovBody {
   padding: 16px;
   position: relative;
   z-index: 1;
 }
-
 .ovMsg {
   font-size: 14px;
   line-height: 1.6;
@@ -1638,7 +1622,6 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.03);
   white-space: pre-line;
 }
-
 .ovActions {
   display: flex;
   justify-content: flex-end;
@@ -1646,7 +1629,6 @@ onBeforeUnmount(() => {
   margin-top: 14px;
   flex-wrap: wrap;
 }
-
 .ovBtn {
   border-radius: 14px;
   padding: 12px 14px;
@@ -1661,16 +1643,13 @@ onBeforeUnmount(() => {
   min-width: 170px;
   justify-content: center;
 }
-
 .ovBtn.ghost {
   background: rgba(255, 255, 255, 0.03);
 }
-
 .ov.success .ovBtn.primary {
   border-color: rgba(56, 189, 248, 0.32);
   background: linear-gradient(90deg, rgba(56, 189, 248, 0.28), rgba(34, 197, 94, 0.12));
 }
-
 .ov.error .ovBtn.primary {
   border-color: rgba(248, 113, 113, 0.28);
   background: linear-gradient(90deg, rgba(248, 113, 113, 0.22), rgba(99, 102, 241, 0.12));

@@ -14,6 +14,8 @@ import jobview from '../view/display/job/jobview.vue'
 import announcementviewer from '../view/announcement/announcementviewer.vue'
 import membersedit from '../view/display/member/MembersEdit.vue.vue'
 import newsedit from '../view/display/news/newsedit.vue'
+import announcementedit from '../view/announcement/announcementedit.vue'
+import jobedit from '../view/display/job/jobedit.vue'
 const routes = [
   {
     path: '/',
@@ -67,6 +69,11 @@ const routes = [
     component: jobview,
   },
    {
+    path: '/jobedit',
+    name: 'jobedit',
+    component: jobedit,
+  },
+   {
     path: '/announcement',
     name: 'announcement',
     component: announcement,
@@ -75,6 +82,11 @@ const routes = [
     path: '/announcementviewer',
     name: 'announcementviewer',
     component: announcementviewer,
+  },
+   {
+    path: '/announcementedit',
+    name: 'announcementedit',
+    component: announcementedit,
   },
    {
     path: '/board_director',

@@ -1,4 +1,4 @@
-<!-- JobList.vue (UPDATED: ✅ Edit/Delete use NewsTable-style cool confirm + ✅ Toast like newview) -->
+<!-- JobList.vue (UPDATED: ✅ Overlay hides duplicated features_heading / features_items (show only features.heading + features.items once) ) -->
 <template>
   <div class="app tech">
     <!-- Ambient glow -->
@@ -8,15 +8,15 @@
     <!-- Sidebar LEFT -->
     <aside ref="sidebarEl" class="sidebar">
       <router-link to="/" style="text-decoration: none;">
-      <div class="brand js-reveal">
-        <div class="brandMark">
-          <img src="/logolapnet/fullcircle.png" alt="" style="width: 100%; height: 100%" />
+        <div class="brand js-reveal">
+          <div class="brandMark">
+            <img src="/logolapnet/fullcircle.png" alt="" style="width: 100%; height: 100%" />
+          </div>
+          <div class="brandText">
+            <div class="brandName">LAPNet</div>
+            <div class="brandSub">Admin Console</div>
+          </div>
         </div>
-        <div class="brandText">
-          <div class="brandName">LAPNet</div>
-          <div class="brandSub">Admin Console</div>
-        </div>
-      </div>
       </router-link>
 
       <nav class="nav js-reveal">
@@ -37,7 +37,13 @@
 
       <div class="spacer" />
 
-      <button class="logout js-reveal" type="button" @click="logout" @mouseenter="btnHover($event, true)" @mouseleave="btnHover($event, false)">
+      <button
+        class="logout js-reveal"
+        type="button"
+        @click="logout"
+        @mouseenter="btnHover($event, true)"
+        @mouseleave="btnHover($event, false)"
+      >
         <span class="navIcon"><i class="fa-solid fa-right-from-bracket"></i></span>
         Log Out
       </button>
@@ -58,7 +64,15 @@
         </div>
 
         <div class="topActions">
-          <button class="iconBtn" type="button" aria-label="Refresh" title="Refresh" @click="fetchJobs" @mouseenter="iconHover($event, true)" @mouseleave="iconHover($event, false)">
+          <button
+            class="iconBtn"
+            type="button"
+            aria-label="Refresh"
+            title="Refresh"
+            @click="fetchJobs"
+            @mouseenter="iconHover($event, true)"
+            @mouseleave="iconHover($event, false)"
+          >
             <i class="fa-solid fa-rotate-right"></i>
           </button>
 
@@ -165,7 +179,15 @@
                   <td class="td tdLast">
                     <div class="actionRow">
                       <!-- View -->
-                      <button class="pillBtn" type="button" title="View" @click.stop="openOverlay(j)" :disabled="isBusy(j)" @mouseenter="pillHover($event, true)" @mouseleave="pillHover($event, false)">
+                      <button
+                        class="pillBtn"
+                        type="button"
+                        title="View"
+                        @click.stop="openOverlay(j)"
+                        :disabled="isBusy(j)"
+                        @mouseenter="pillHover($event, true)"
+                        @mouseleave="pillHover($event, false)"
+                      >
                         <i class="fa-regular fa-eye"></i>
                         View
                       </button>
@@ -185,14 +207,30 @@
                         {{ isActive(j) ? "Active" : "Inactive" }}
                       </button>
 
-                      <!-- ✅ Edit (now uses newview confirm) -->
-                      <button class="pillBtn" type="button" title="Edit" :disabled="isBusy(j)" @click.stop="askEdit(j)" @mouseenter="pillHover($event, true)" @mouseleave="pillHover($event, false)">
+                      <!-- ✅ Edit -->
+                      <button
+                        class="pillBtn"
+                        type="button"
+                        title="Edit"
+                        :disabled="isBusy(j)"
+                        @click.stop="askEdit(j)"
+                        @mouseenter="pillHover($event, true)"
+                        @mouseleave="pillHover($event, false)"
+                      >
                         <i class="fa-regular fa-pen-to-square"></i>
                         Edit
                       </button>
 
-                      <!-- ✅ Delete (now uses newview confirm) -->
-                      <button class="pillBtn danger" type="button" title="Delete" :disabled="isBusy(j)" @click.stop="askDelete(j)" @mouseenter="pillHover($event, true)" @mouseleave="pillHover($event, false)">
+                      <!-- ✅ Delete -->
+                      <button
+                        class="pillBtn danger"
+                        type="button"
+                        title="Delete"
+                        :disabled="isBusy(j)"
+                        @click.stop="askDelete(j)"
+                        @mouseenter="pillHover($event, true)"
+                        @mouseleave="pillHover($event, false)"
+                      >
                         <i class="fa-regular fa-trash-can"></i>
                         Delete
                       </button>
@@ -217,7 +255,14 @@
                     {{ titleOf(selected) }}
                   </div>
 
-                  <button class="iconBtn" type="button" aria-label="Close" @click="closeOverlay" @mouseenter="iconHover($event, true)" @mouseleave="iconHover($event, false)">
+                  <button
+                    class="iconBtn"
+                    type="button"
+                    aria-label="Close"
+                    @click="closeOverlay"
+                    @mouseenter="iconHover($event, true)"
+                    @mouseleave="iconHover($event, false)"
+                  >
                     <i class="fa-solid fa-xmark"></i>
                   </button>
                 </div>
@@ -254,10 +299,20 @@
           <!-- ✅ Newview-style Cool Confirm (Edit/Delete) -->
           <Teleport to="body">
             <div v-if="confirmOpen" class="confirmOverlay" @click.self="closeConfirm">
-              <div ref="confirmEl" class="confirmCard" :class="{ danger: confirmAction === 'delete', info: confirmAction === 'edit' }">
+              <div
+                ref="confirmEl"
+                class="confirmCard"
+                :class="{ danger: confirmAction === 'delete', info: confirmAction === 'edit' }"
+              >
                 <div class="confirmIcon">
                   <div class="skull">
-                    <i :class="confirmAction === 'delete' ? 'fa-solid fa-triangle-exclamation' : 'fa-regular fa-pen-to-square'"></i>
+                    <i
+                      :class="
+                        confirmAction === 'delete'
+                          ? 'fa-solid fa-triangle-exclamation'
+                          : 'fa-regular fa-pen-to-square'
+                      "
+                    ></i>
                   </div>
                   <span class="ring ringA"></span>
                   <span class="ring ringB"></span>
@@ -272,7 +327,11 @@
                   <b class="confirmName">{{ confirmName }}</b>
 
                   <div class="confirmHint">
-                    {{ confirmAction === "delete" ? "This action cannot be undone." : "You will be redirected to the editor." }}
+                    {{
+                      confirmAction === "delete"
+                        ? "This action cannot be undone."
+                        : "You will be redirected to the editor."
+                    }}
                   </div>
                 </div>
 
@@ -465,6 +524,15 @@ function isImageKey(k) {
   );
 }
 
+/** ✅ Hide duplicated derived fields from overlay/table/filter */
+function isDerivedFeaturesKey(k) {
+  const s = String(k || "").toLowerCase();
+  return s === "features_heading" || s === "features_items" || s === "featuresheading" || s === "featuresitems";
+}
+function isHiddenKey(k) {
+  return isImageKey(k) || isDerivedFeaturesKey(k);
+}
+
 function safeValue(v) {
   if (typeof v !== "string") return v;
   const s = v.trim();
@@ -530,7 +598,15 @@ function clearFilters() {
    ✅ Active / Inactive logic (0/1)
    ========================= */
 function isActive(j) {
-  const raw = j?.active ?? j?.is_active ?? j?.isActive ?? j?.enabled ?? j?.status ?? j?.state ?? j?.publish_status ?? j?.published;
+  const raw =
+    j?.active ??
+    j?.is_active ??
+    j?.isActive ??
+    j?.enabled ??
+    j?.status ??
+    j?.state ??
+    j?.publish_status ??
+    j?.published;
 
   if (typeof raw === "number") return raw === 1;
   if (typeof raw === "boolean") return raw;
@@ -658,9 +734,11 @@ const tableCols = computed(() => {
   if (!jobs.value.length) return ["job_id", "title", "department", "levels", "time", "active"];
 
   const keysSet = new Set();
-  jobs.value.slice(0, 20).forEach((j) => Object.keys(j || {}).forEach((k) => keysSet.add(k)));
+  jobs.value
+    .slice(0, 20)
+    .forEach((j) => Object.keys(j || {}).forEach((k) => !isHiddenKey(k) && keysSet.add(k)));
 
-  const keys = Array.from(keysSet).filter((k) => !isImageKey(k));
+  const keys = Array.from(keysSet);
 
   const preferred = [
     "job_id",
@@ -681,7 +759,7 @@ const tableCols = computed(() => {
     "createdAt",
     "updatedAt",
     "features",
-  ].filter((k) => !isImageKey(k));
+  ].filter((k) => !isHiddenKey(k));
 
   const picked = [];
   for (const k of preferred) if (keys.includes(k) && !picked.includes(k)) picked.push(k);
@@ -703,7 +781,7 @@ const filterKeys = computed(() => {
   jobs.value.slice(0, 30).forEach((j) => {
     Object.entries(j || {}).forEach(([k, v]) => {
       if (k === "password" || k === "pwd") return;
-      if (isImageKey(k)) return;
+      if (isHiddenKey(k)) return;
       if (typeof v === "object" && v !== null) return;
       set.add(k);
     });
@@ -732,6 +810,7 @@ const rows = computed(() => {
 
 /* =========================
    Flatten ALL fields for overlay
+   ✅ HIDE duplicated: features_heading + features_items (only show features.heading + features.items)
    ========================= */
 function toText(v) {
   if (v === null || v === undefined) return "-";
@@ -827,8 +906,7 @@ function flattenAny(val, path, out) {
 
     for (const [k, v] of entries) {
       if (k === "password" || k === "pwd") continue;
-      if (isImageKey(k)) continue;
-
+      if (isHiddenKey(k)) continue; // ✅ HERE: hides features_heading + features_items + images
       const p = path ? `${path}.${k}` : k;
 
       const maybeArr = asArrayMaybe(v);
@@ -861,7 +939,11 @@ async function openOverlay(j) {
   await nextTick();
 
   gsap.fromTo(overlayEl.value, { opacity: 0 }, { opacity: 1, duration: 0.16, ease: "power2.out" });
-  gsap.fromTo(modalEl.value, { opacity: 0, y: 12, scale: 0.985 }, { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "power2.out" });
+  gsap.fromTo(
+    modalEl.value,
+    { opacity: 0, y: 12, scale: 0.985 },
+    { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "power2.out" }
+  );
 }
 
 function closeOverlay() {
@@ -1061,7 +1143,13 @@ onBeforeUnmount(() => {
   content: "";
   position: absolute;
   inset: -2px;
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.45), rgba(99, 102, 241, 0.25), rgba(14, 165, 233, 0.22), rgba(56, 189, 248, 0.45));
+  background: linear-gradient(
+    90deg,
+    rgba(56, 189, 248, 0.45),
+    rgba(99, 102, 241, 0.25),
+    rgba(14, 165, 233, 0.22),
+    rgba(56, 189, 248, 0.45)
+  );
   opacity: 0.14;
   filter: blur(14px);
   pointer-events: none;

@@ -176,6 +176,25 @@
                       </div>
                     </template>
 
+                    <!-- ✅ LinkFB / LinkWeb clickable -->
+                    <template v-else-if="isLinkField(col)">
+                      <template v-if="safeUrl(m?.[col])">
+                        <a
+                          class="linkCell"
+                          :href="safeUrl(m?.[col])"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          @click.stop
+                        >
+                          {{ formatCell(m?.[col]) }}
+                          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                      </template>
+                      <template v-else>
+                        {{ formatCell(m?.[col]) }}
+                      </template>
+                    </template>
+
                     <template v-else>
                       {{ formatCell(m?.[col]) }}
                     </template>
@@ -321,6 +340,25 @@
                             :title="normalizeHex(item.v) ? normalizeHex(item.v) : 'Invalid HEX'"
                           />
                           <span class="hexPill">{{ normalizeHex(item.v) || item.v || "-" }}</span>
+                        </div>
+                      </div>
+
+                      <!-- ✅ LinkFB / LinkWeb clickable in overlay -->
+                      <div v-else-if="isLinkField(item.k)" class="v">
+                        <template v-if="safeUrl(item.v)">
+                          <a class="linkCell" :href="safeUrl(item.v)" target="_blank" rel="noopener noreferrer" @click.stop>
+                            {{ item.v }}
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                          </a>
+                        </template>
+                        <template v-else>
+                          <div>{{ item.v }}</div>
+                        </template>
+
+                        <!-- ✅ Logo under idmember -->
+                        <div v-if="isIdMemberCol(item.k) && selectedLogoUrl" class="logoUnderId">
+                          <div class="logoLabel">Logo</div>
+                          <img class="logoImg" :src="selectedLogoUrl" alt="Logo" />
                         </div>
                       </div>
 
@@ -668,6 +706,32 @@ function isIdMemberCol(k) {
 }
 function colLabel(col) {
   return isIdMemberCol(col) ? "No" : col;
+}
+
+/* =========================
+   ✅ Link helpers (LinkFB / LinkWeb)
+   ========================= */
+const LINK_KEYS = new Set(["linkfb", "linkweb"]);
+function lastSegmentKey(k) {
+  const s = String(k || "");
+  const parts = s.split(".");
+  return (parts[parts.length - 1] || "").trim();
+}
+function isLinkField(k) {
+  return LINK_KEYS.has(lastSegmentKey(k).toLowerCase());
+}
+function safeUrl(input) {
+  const raw = String(input ?? "").trim();
+  if (!raw || raw === "-") return null;
+
+  // block unsafe protocols
+  if (/^(javascript:|data:|vbscript:)/i.test(raw)) return null;
+
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("//")) return `https:${raw}`;
+
+  // common case: "www.xxx.com" or "facebook.com/..."
+  return `https://${raw.replace(/^\/+/, "")}`;
 }
 
 /* =========================
@@ -1956,6 +2020,24 @@ onBeforeUnmount(() => {
 }
 .tdLast {
   width: 320px;
+}
+
+/* ✅ Link style */
+.linkCell {
+  color: rgba(56, 189, 248, 0.95);
+  text-decoration: none;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.linkCell:hover {
+  text-decoration: underline;
+}
+.linkCell i {
+  font-size: 12px;
+  opacity: 0.85;
 }
 
 .empty {

@@ -1,4 +1,4 @@
-<!-- AnnouncementView.vue (UPDATED: supports imageurl + robust image URL resolver + broken-image fallback) -->
+<!-- AnnouncementView.vue (UPDATED: remove time column, add Link column from linkpath, clickable in table + overlay) -->
 <template>
   <div class="app tech">
     <!-- Ambient glow -->
@@ -196,9 +196,31 @@
                     </div>
                   </td>
 
-                  <!-- Data cells -->
+                  <!-- ✅ Data cells -->
                   <td v-for="col in tableCols" :key="col" class="td">
-                    {{ formatCell(safeValue(a?.[col])) }}
+                    <template v-if="col === 'announcementNo'">
+                      {{ announcementNoValue(a, idx) }}
+                    </template>
+
+                    <!-- ✅ NEW: Link column from linkpath -->
+                    <template v-else-if="col === 'Link'">
+                      <a
+                        v-if="linkHref(a)"
+                        class="cellLink"
+                        :href="linkHref(a)"
+                        target="_blank"
+                        rel="noreferrer"
+                        @click.stop
+                      >
+                        {{ linkDisplay(a) }}
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                      </a>
+                      <span v-else>-</span>
+                    </template>
+
+                    <template v-else>
+                      {{ formatCell(safeValue(a?.[col])) }}
+                    </template>
                   </td>
 
                   <!-- Actions -->
@@ -329,6 +351,22 @@
                         </div>
                       </div>
 
+                      <!-- ✅ NEW: link type in overlay -->
+                      <div v-else-if="item.type === 'link'" class="v">
+                        <a
+                          v-if="item.href"
+                          class="cellLink"
+                          :href="item.href"
+                          target="_blank"
+                          rel="noreferrer"
+                          @click.stop
+                        >
+                          {{ item.text }}
+                          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                        <span v-else>-</span>
+                      </div>
+
                       <div v-else class="v">
                         {{ item.v }}
                       </div>
@@ -341,7 +379,7 @@
             </div>
           </Teleport>
 
-          <!-- Confirm + Toast (unchanged) -->
+          <!-- Confirm + Toast -->
           <Teleport to="body">
             <div v-if="confirmOpen" class="confirmOverlay" @click.self="closeConfirm">
               <div
@@ -458,6 +496,9 @@ const API_ORIGIN = (() => {
 // ✅ If DB returns only filename, we will prefix this folder:
 const ANNOUNCEMENT_UPLOAD_REL = "uploads/announcement"; // no leading slash on purpose
 
+// ✅ your edit route
+const EDIT_PATH = "/announcementedit";
+
 const announcements = ref([]);
 const loading = ref(false);
 const error = ref("");
@@ -554,6 +595,7 @@ function logout() {
   console.log("logout");
 }
 
+// ✅ keep this for API calls (edit/delete/status)
 function rowKey(a, i) {
   return a?.idannouncement ?? a?.id_announcement ?? a?.announcement_id ?? a?.id ?? a?._id ?? `${i}`;
 }
@@ -562,9 +604,25 @@ function titleOf(a) {
   return a?.title ?? a?.header ?? a?.name ?? `#${rowKey(a, "")}`;
 }
 
+function isAnnouncementIdKey(k) {
+  const s = String(k || "").toLowerCase();
+  return s === "idannouncement" || s === "id_announcement" || s === "announcement_id" || s === "announcementid";
+}
+
+function isLinkPathKey(k) {
+  const s = String(k || "").toLowerCase();
+  return s === "linkpath" || s === "link_path" || s === "link_path_url" || s === "linkurl" || s === "link_url";
+}
+
+/**
+ * ✅ IMPORTANT FIX:
+ * Old version used `s.includes("path")` which accidentally hid `linkpath`.
+ * Now we only treat "path/file" as image-related when it ALSO hints image/img/photo/pic.
+ */
 function isImageKey(k) {
   const s = String(k || "").toLowerCase();
-  return (
+
+  const imageish =
     s === "image" ||
     s === "img" ||
     s.includes("image") ||
@@ -573,9 +631,69 @@ function isImageKey(k) {
     s.includes("avatar") ||
     s.includes("photo") ||
     s.includes("picture") ||
-    s.includes("icon") ||
-    s.includes("path")
-  );
+    s.includes("pic") ||
+    s.includes("icon");
+
+  const pathish = s.includes("path") || s.includes("file");
+  const pathLooksImage = pathish && (s.includes("image") || s.includes("img") || s.includes("photo") || s.includes("pic"));
+
+  // ✅ don't treat linkpath as image field
+  if (isLinkPathKey(s)) return false;
+
+  return imageish || pathLooksImage;
+}
+
+// ✅ announcementNo: use backend field if exists else fallback idx+1
+function announcementNoValue(a, idx) {
+  const v = a?.announcementNo ?? a?.announcement_no ?? a?.no ?? a?.No ?? a?.ANNOUNCEMENT_NO;
+  const n = Number(v);
+  if (Number.isFinite(n) && n > 0) return n;
+
+  const s = String(v ?? "").trim();
+  if (s && !/^(null|undefined|-)$/i.test(s)) return s;
+
+  return idx + 1;
+}
+
+/* =========================
+   ✅ Link helpers (from linkpath)
+   ========================= */
+function normalizeLink(v) {
+  if (!v) return "";
+  let s = String(v).trim();
+  if (!s || /^(null|undefined|-)$/i.test(s)) return "";
+
+  // allow mailto/tel
+  if (/^(mailto:|tel:)/i.test(s)) return s;
+
+  // already absolute
+  if (/^https?:\/\//i.test(s)) return s;
+
+  // protocol-relative
+  if (/^\/\//.test(s)) return `https:${s}`;
+
+  // server relative
+  if (s.startsWith("/")) return `${API_ORIGIN}${s}`;
+
+  // if it looks like a domain, prefix https://
+  if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(s)) return `https://${s}`;
+
+  // fallback (may be relative path)
+  return s;
+}
+
+function linkRaw(row) {
+  return row?.linkpath ?? row?.link_path ?? row?.link_url ?? row?.linkurl ?? row?.link ?? row?.url ?? "";
+}
+
+function linkHref(row) {
+  return normalizeLink(linkRaw(row));
+}
+
+function linkDisplay(row) {
+  const raw = String(linkRaw(row) ?? "").trim();
+  if (!raw) return "Open";
+  return raw.length > 34 ? raw.slice(0, 34) + "…" : raw;
 }
 
 function safeValue(v) {
@@ -631,6 +749,9 @@ function compare(a, b) {
 }
 
 function toggleSort(col) {
+  // ✅ don't sort derived columns
+  if (col === "announcementNo" || col === "Link") return;
+
   if (sortKey.value !== col) {
     sortKey.value = col;
     sortDir.value = "asc";
@@ -692,7 +813,7 @@ function toAbsUrlMaybe(v) {
 }
 
 function rowImageUrl(a) {
-  // ✅ UPDATED: include imageurl (common DB field)
+  // ✅ include imageurl (common DB field)
   const cand =
     a?.image_url ??
     a?.imageurl ??
@@ -788,13 +909,14 @@ async function confirmProceed() {
   const id = rowKey(row, "");
   const name = titleOf(row);
 
+  // ✅ EDIT -> /announcementedit?id=...
   if (confirmAction.value === "edit") {
     confirmLoading.value = true;
     setBusy(String(id), true);
     closeConfirm();
     showToast("info", "Opening editor…");
 
-    router.push({ path: "/announcementedit", query: { id: String(id ?? "") } });
+    router.push({ path: EDIT_PATH, query: { id: String(id ?? "") } });
 
     setBusy(String(id), false);
     confirmLoading.value = false;
@@ -832,30 +954,42 @@ async function confirmProceed() {
    Columns + Filters
    ========================= */
 const tableCols = computed(() => {
-  const preferred = ["idannouncement", "id_announcement", "announcement_id", "title", "description"];
+  // ✅ remove "time"; keep Link derived from linkpath
+  const preferred = ["title", "description", "range", "link"];
 
-  if (!announcements.value.length) return ["idannouncement", "title", "description"];
+  // We want total max 8 columns including announcementNo + Link
+  const MAX_COLS = 8;
+  const MAX_PICKED = MAX_COLS - 2; // reserve for announcementNo + Link
+
+  if (!announcements.value.length) return ["announcementNo", "title", "description", "Link"];
 
   const keysSet = new Set();
   announcements.value.slice(0, 20).forEach((a) => Object.keys(a || {}).forEach((k) => keysSet.add(k)));
 
-  const keys = Array.from(keysSet).filter((k) => !isImageKey(k));
-  const keysNoActive = keys.filter(
-    (k) => !["active", "is_active", "enabled", "status", "published"].includes(String(k).toLowerCase())
-  );
+  const keys = Array.from(keysSet).filter((k) => !isImageKey(k) && !isAnnouncementIdKey(k));
+
+  // ✅ remove time + linkpath from normal columns
+  const keysNoActive = keys.filter((k) => {
+    const lk = String(k).toLowerCase();
+    if (["active", "is_active", "enabled", "status", "published"].includes(lk)) return false;
+    if (lk === "time") return false;
+    if (isLinkPathKey(lk)) return false;
+    return true;
+  });
 
   const picked = [];
   for (const k of preferred) if (keysNoActive.includes(k) && !picked.includes(k)) picked.push(k);
 
   const sample = announcements.value[0] || {};
   for (const k of keysNoActive) {
-    if (picked.length >= 8) break;
+    if (picked.length >= MAX_PICKED) break;
     const v = sample[k];
     if (typeof v === "object" && v !== null) continue;
     if (!picked.includes(k)) picked.push(k);
   }
 
-  return picked.slice(0, 8);
+  // ✅ always include Link as last column
+  return ["announcementNo", ...picked.slice(0, MAX_PICKED), "Link"].slice(0, MAX_COLS);
 });
 
 const filterKeys = computed(() => {
@@ -863,8 +997,11 @@ const filterKeys = computed(() => {
   const set = new Set();
   announcements.value.slice(0, 30).forEach((a) => {
     Object.entries(a || {}).forEach(([k, v]) => {
+      const lk = String(k).toLowerCase();
       if (k === "password" || k === "pwd") return;
+      if (lk === "time") return; // ✅ hide time
       if (isImageKey(k)) return;
+      if (isAnnouncementIdKey(k)) return;
       if (typeof v === "object" && v !== null) return;
       set.add(k);
     });
@@ -892,7 +1029,10 @@ const rows = computed(() => {
 });
 
 /* =========================
-   Flatten ALL fields for overlay (hide image keys)
+   Flatten ALL fields for overlay
+   - hide image keys + hide announcement id keys
+   - convert linkpath -> Link (clickable)
+   - hide time
    ========================= */
 function toText(v) {
   if (v === null || v === undefined) return "-";
@@ -965,7 +1105,23 @@ function flattenAny(val, path, out) {
     }
 
     for (const [k, v] of entries) {
+      const lk = String(k).toLowerCase();
       if (k === "password" || k === "pwd") continue;
+      if (lk === "time") continue; // ✅ hide time in overlay
+      if (isAnnouncementIdKey(k)) continue;
+
+      // ✅ convert linkpath -> Link (clickable)
+      if (isLinkPathKey(k)) {
+        const raw = String(v ?? "").trim();
+        out.push({
+          k: "Link",
+          type: "link",
+          href: normalizeLink(raw),
+          text: raw || "-",
+        });
+        continue;
+      }
+
       if (isImageKey(k)) continue;
 
       const p = path ? `${path}.${k}` : k;
@@ -988,8 +1144,28 @@ function flattenAny(val, path, out) {
 const flatEntries = computed(() => {
   if (!selected.value) return [];
   const out = [];
+
+  // ✅ ensure Link appears even if linkpath is at root
+  const rootLink = linkRaw(selected.value);
+  if (String(rootLink ?? "").trim()) {
+    out.push({
+      k: "Link",
+      type: "link",
+      href: normalizeLink(rootLink),
+      text: String(rootLink),
+    });
+  }
+
   flattenAny(selected.value, "", out);
-  return out;
+
+  // ✅ dedupe: keep first "Link"
+  const seen = new Set();
+  return out.filter((x) => {
+    const key = String(x.k);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 });
 
 /* =========================
@@ -1117,9 +1293,6 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<!-- ✅ Keep your existing <style scoped> exactly the same (no changes needed) -->
-
-<!-- ✅ Keep your existing <style scoped> exactly the same (no changes needed) -->
 <style scoped>
 /* ===== same theme as your JobList.vue ===== */
 :root {
@@ -1586,6 +1759,19 @@ onBeforeUnmount(() => {
   text-align: center;
   color: var(--muted);
   font-weight: 900;
+}
+
+/* ✅ Link style (table + overlay) */
+.cellLink {
+  color: rgba(56, 189, 248, 0.95);
+  text-decoration: none;
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.cellLink:hover {
+  text-decoration: underline;
 }
 
 /* ✅ Image column */

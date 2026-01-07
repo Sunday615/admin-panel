@@ -130,6 +130,13 @@
               <span>Filtered:</span>
               <b>{{ rows.length }}</b>
             </div>
+
+            <!-- ✅ Pagination info pill -->
+            <div class="metaPill" v-if="!loading && !error && rows.length">
+              <i class="fa-solid fa-book-open"></i>
+              <span>Page:</span>
+              <b>{{ page }}/{{ totalPages }}</b>
+            </div>
           </div>
 
           <!-- Table -->
@@ -148,7 +155,6 @@
                     @keydown.enter.prevent="toggleSort(col)"
                     @keydown.space.prevent="toggleSort(col)"
                   >
-                    <!-- ✅ change only idnews label => NO -->
                     <span class="thLabel">{{ colLabel(col) }}</span>
                     <span class="sortIcon" v-if="sortKey === col">
                       <i :class="sortDir === 'asc' ? 'fa-solid fa-caret-up' : 'fa-solid fa-caret-down'"></i>
@@ -160,19 +166,19 @@
                 </tr>
               </thead>
 
-              <tbody>
+              <tbody ref="tbodyEl">
                 <tr
-                  v-for="(n, idx) in rows"
+                  v-for="(n, idx) in pagedRows"
                   :key="rowKey(n, idx)"
-                  class="tr js-reveal"
+                  class="tr js-reveal rowAnim"
                   @click="openOverlay(n)"
                   @mouseenter="rowHover($event, true)"
                   @mouseleave="rowHover($event, false)"
                 >
                   <td v-for="col in tableCols" :key="col" class="td" :class="{ colWide: isTitleCol(col) }">
-                    <!-- ✅ change only idnews value => running number -->
+                    <!-- ✅ idnews => running number (with pagination offset) -->
                     <template v-if="isNoCol(col)">
-                      {{ idx + 1 }}
+                      {{ rowOffset + idx + 1 }}
                     </template>
 
                     <template v-else-if="isTitleCol(col)">
@@ -210,7 +216,6 @@
                         View
                       </button>
 
-                      <!-- ✅ EDIT: show confirm modal first -->
                       <button
                         class="pillBtn"
                         type="button"
@@ -245,6 +250,44 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- ✅ Pagination (7 per page) -->
+          <div ref="pagerEl" class="pager js-reveal" v-if="!loading && !error && rows.length > PAGE_SIZE">
+            <div class="pagerInfo">
+              Showing <b>{{ showingStart }}</b>–<b>{{ showingEnd }}</b> of <b>{{ rows.length }}</b>
+            </div>
+
+            <div class="pagerBtns">
+              <button class="pBtn" type="button" :disabled="page <= 1" @click="goPage(page - 1, $event)">
+                <i class="fa-solid fa-angle-left"></i>
+                Prev
+              </button>
+
+              <button v-if="pageRange.start > 1" class="pBtn" type="button" @click="goPage(1, $event)">1</button>
+              <span v-if="pageRange.start > 2" class="pDots">…</span>
+
+              <button
+                v-for="p in pageRange.pages"
+                :key="'p' + p"
+                class="pBtn"
+                :class="{ active: p === page }"
+                type="button"
+                @click="goPage(p, $event)"
+              >
+                {{ p }}
+              </button>
+
+              <span v-if="pageRange.end < totalPages - 1" class="pDots">…</span>
+              <button v-if="pageRange.end < totalPages" class="pBtn" type="button" @click="goPage(totalPages, $event)">
+                {{ totalPages }}
+              </button>
+
+              <button class="pBtn" type="button" :disabled="page >= totalPages" @click="goPage(page + 1, $event)">
+                Next
+                <i class="fa-solid fa-angle-right"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Overlay -->
@@ -419,7 +462,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import gsap from "gsap";
 
@@ -427,6 +470,9 @@ const router = useRouter();
 
 const sidebarEl = ref(null);
 const topbarEl = ref(null);
+
+const tbodyEl = ref(null); // ✅ table body ref for page animations
+const pagerEl = ref(null); // ✅ pager ref for subtle entrance
 
 const userName = "Arkhan";
 
@@ -461,6 +507,54 @@ const modalEl = ref(null);
 const imgViewer = reactive({ open: false, src: "" });
 
 let abortCtrl = null;
+
+/* =========================
+   ✅ Pagination (7 per page)
+   ========================= */
+const PAGE_SIZE = 7;
+const page = ref(1);
+
+const rowOffset = computed(() => (page.value - 1) * PAGE_SIZE);
+
+function clamp(n, a, b) {
+  return Math.min(Math.max(n, a), b);
+}
+
+/* ✅ micro "tap" animation for pager buttons */
+function tap(el) {
+  if (!el) return;
+  gsap.fromTo(el, { scale: 0.98 }, { scale: 1, duration: 0.18, ease: "power2.out" });
+}
+
+function goPage(p, ev) {
+  tap(ev?.currentTarget);
+  const tp = totalPages.value;
+  page.value = clamp(Number(p) || 1, 1, tp);
+}
+
+/* ✅ modern page transition for table rows */
+async function animateRows(direction = 1) {
+  await nextTick();
+  const root = tbodyEl.value;
+  if (!root) return;
+
+  const els = Array.from(root.querySelectorAll("tr.rowAnim"));
+  if (!els.length) return;
+
+  gsap.killTweensOf(els);
+  gsap.fromTo(
+    els,
+    { opacity: 0, y: 10, x: direction * 10, filter: "blur(2px)" },
+    { opacity: 1, y: 0, x: 0, filter: "blur(0px)", duration: 0.28, stagger: 0.035, ease: "power2.out" }
+  );
+}
+
+async function animatePagerIn() {
+  await nextTick();
+  if (!pagerEl.value) return;
+  gsap.killTweensOf(pagerEl.value);
+  gsap.fromTo(pagerEl.value, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.24, ease: "power2.out" });
+}
 
 /* =========================
    ✅ Busy state per row
@@ -845,6 +939,59 @@ const rows = computed(() => {
   return arr;
 });
 
+/* ✅ Pagination derived from filtered/sorted rows */
+const totalPages = computed(() => Math.max(1, Math.ceil(rows.value.length / PAGE_SIZE)));
+
+const pagedRows = computed(() => {
+  const start = rowOffset.value;
+  return rows.value.slice(start, start + PAGE_SIZE);
+});
+
+const showingStart = computed(() => (rows.value.length ? rowOffset.value + 1 : 0));
+const showingEnd = computed(() => Math.min(rowOffset.value + PAGE_SIZE, rows.value.length));
+
+const pageRange = computed(() => {
+  const tp = totalPages.value;
+  const cur = clamp(page.value, 1, tp);
+
+  let start = Math.max(1, cur - 2);
+  let end = Math.min(tp, start + 4);
+  start = Math.max(1, end - 4);
+
+  const pages = [];
+  for (let i = start; i <= end; i++) pages.push(i);
+  return { start, end, pages };
+});
+
+/* Reset page when query/filter/sort changes */
+watch([q, filterKey, filterValue, sortKey, sortDir], () => {
+  page.value = 1;
+});
+
+/* ✅ clamp page + animate rows when data view changes */
+watch(
+  rows,
+  async () => {
+    const tp = totalPages.value;
+    if (page.value > tp) page.value = tp;
+    if (page.value < 1) page.value = 1;
+
+    // modern reveal after filter/sort/search/fetch
+    await animateRows(1);
+
+    // pager appears/disappears nicely
+    if (tp > 1) await animatePagerIn();
+  },
+  { immediate: true }
+);
+
+/* ✅ animate row transition on page changes (left/right slide) */
+watch(page, async (p, old) => {
+  const dir = p >= (old ?? 1) ? 1 : -1;
+  await animateRows(dir);
+  if (totalPages.value > 1) await animatePagerIn();
+});
+
 function toggleSort(col) {
   if (sortKey.value !== col) {
     sortKey.value = col;
@@ -860,6 +1007,7 @@ function clearFilters() {
   filterValue.value = "";
   sortKey.value = "";
   sortDir.value = "asc";
+  page.value = 1;
 }
 
 /* =========================
@@ -867,7 +1015,7 @@ function clearFilters() {
    ========================= */
 function editNews(n) {
   const id = rowKey(n, "");
-  router.push({ path: "/newsedit", query: { id: String(id ?? "") } }); // ✅ change to /newsedit
+  router.push({ path: "/newsedit", query: { id: String(id ?? "") } });
 }
 
 /* ✅ Edit confirm flow */
@@ -1009,11 +1157,15 @@ async function fetchNews() {
       : [];
 
     news.value = list;
+    page.value = 1;
 
     requestAnimationFrame(() => {
       gsap.set(".membersPage .js-reveal", { opacity: 0, y: 10 });
       gsap.to(".membersPage .js-reveal", { opacity: 1, y: 0, duration: 0.42, stagger: 0.04, ease: "power3.out" });
     });
+
+    // ✅ modern row reveal after fetch
+    await animateRows(1);
   } catch (err) {
     if (err?.name === "AbortError") return;
     console.error(err);
@@ -1131,6 +1283,7 @@ onBeforeUnmount(() => {
   font-weight: 900;
   cursor: pointer;
   line-height: 1;
+  will-change: transform;
 }
 
 .pillBtn:hover {
@@ -1149,6 +1302,130 @@ onBeforeUnmount(() => {
 
 .pillBtn.danger:hover {
   border-color: rgba(239, 68, 68, 0.45);
+}
+
+/* ✅ Pagination bar */
+.pager {
+  margin-top: 12px;
+  padding: 12px 12px;
+  border-radius: 18px;
+  background: var(--panel2);
+  border: 1px solid var(--stroke);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pagerInfo {
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 900;
+  font-size: 12px;
+}
+.pagerInfo b {
+  color: rgba(255, 255, 255, 0.92);
+}
+.pagerBtns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.pBtn {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 950;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  will-change: transform;
+}
+.pBtn:hover {
+  border-color: rgba(56, 189, 248, 0.18);
+  color: rgba(255, 255, 255, 0.95);
+}
+.pBtn.active {
+  border-color: rgba(56, 189, 248, 0.28);
+  background: rgba(56, 189, 248, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  animation: pageActive 0.24s ease-out;
+}
+@keyframes pageActive {
+  from {
+    transform: scale(0.97);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.pBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.pDots {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 950;
+  padding: 0 4px;
+}
+
+/* ======= Modern ambient animations ======= */
+@keyframes floatGlowA {
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(28px, -18px) scale(1.06);
+  }
+}
+@keyframes floatGlowB {
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-22px, 16px) scale(1.05);
+  }
+}
+
+/* shimmer / glass sweep on table */
+@keyframes sheen {
+  0% {
+    transform: translateX(-70%);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.55;
+  }
+  55% {
+    transform: translateX(70%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(70%);
+    opacity: 0;
+  }
+}
+
+/* reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .glow-a,
+  .glow-b {
+    animation: none !important;
+  }
+  .tableWrap::before {
+    animation: none !important;
+  }
+  .pBtn.active {
+    animation: none !important;
+  }
 }
 
 /* ======= keep your existing styles (rest unchanged) ======= */
@@ -1204,6 +1481,7 @@ onBeforeUnmount(() => {
   left: -180px;
   top: 120px;
   background: radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.4), transparent 62%);
+  animation: floatGlowA 10s ease-in-out infinite;
 }
 .glow-b {
   width: 560px;
@@ -1211,6 +1489,7 @@ onBeforeUnmount(() => {
   right: -200px;
   top: -160px;
   background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.34), transparent 62%);
+  animation: floatGlowB 12s ease-in-out infinite;
 }
 
 /* Sidebar */
@@ -1294,6 +1573,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   transition: background 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  will-change: transform;
 }
 .navItem:hover {
   background: rgba(255, 255, 255, 0.05);
@@ -1344,6 +1624,7 @@ onBeforeUnmount(() => {
   gap: 10px;
   align-items: center;
   cursor: pointer;
+  will-change: transform;
 }
 
 /* main */
@@ -1411,6 +1692,7 @@ onBeforeUnmount(() => {
   place-items: center;
   cursor: pointer;
   color: rgba(255, 255, 255, 0.86);
+  will-change: transform;
 }
 .profile {
   display: flex;
@@ -1524,6 +1806,7 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.78);
   font-weight: 900;
   cursor: pointer;
+  will-change: transform;
 }
 .metaRow {
   display: flex;
@@ -1567,6 +1850,18 @@ onBeforeUnmount(() => {
   border: 1px solid var(--stroke);
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(12px);
+  position: relative; /* ✅ for sheen */
+}
+.tableWrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.07) 45%, transparent 70%);
+  transform: translateX(-70%);
+  animation: sheen 7.5s ease-in-out infinite;
+  opacity: 0.18;
+  mix-blend-mode: screen;
 }
 .table {
   width: 100%;
@@ -1582,6 +1877,7 @@ onBeforeUnmount(() => {
 .tr {
   cursor: pointer;
   transition: background 160ms ease;
+  will-change: transform;
 }
 .tr:hover {
   background: rgba(255, 255, 255, 0.03);
