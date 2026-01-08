@@ -133,14 +133,14 @@
               <b>{{ rows.length }}</b>
               <span>ທະນາຄານ</span>
             </div>
+
             <router-link to="/memberinsert">
-            <div class="metaPill" id="add_member">
-             <i class="fa-solid fa-plus"></i>
-              <span>ເພີ່ມທະນາຄານສະມາຊິກ</span>
-              <b></b>
-            </div>
+              <div class="metaPill" id="add_member">
+                <i class="fa-solid fa-plus"></i>
+                <span>ເພີ່ມທະນາຄານສະມາຊິກ</span>
+                <b></b>
+              </div>
             </router-link>
-            
           </div>
 
           <!-- Table -->
@@ -177,7 +177,12 @@
                   @mouseenter="rowHover($event, true)"
                   @mouseleave="rowHover($event, false)"
                 >
-                  <td v-for="col in tableCols" :key="col" class="td">
+                  <td
+                    v-for="col in tableCols"
+                    :key="col"
+                    class="td"
+                    :class="{ fullText: isFullTextCol(col) }"
+                  >
                     <!-- ✅ idmember = running number across ALL filtered rows -->
                     <template v-if="isIdMemberCol(col)">
                       <div class="idCell">
@@ -186,27 +191,28 @@
                       </div>
                     </template>
 
-                    <!-- ✅ LinkFB / LinkWeb clickable -->
+                    <!-- ✅ LinkFB / LinkWeb => button with icon -->
                     <template v-else-if="isLinkField(col)">
                       <template v-if="safeUrl(m?.[col])">
                         <a
-                          class="linkCell"
+                          class="linkBtn"
+                          :class="isFacebookKey(col) ? 'fb' : 'web'"
                           :href="safeUrl(m?.[col])"
                           target="_blank"
                           rel="noopener noreferrer"
                           @click.stop
+                          :title="isFacebookKey(col) ? 'Open Facebook' : 'Open Website'"
                         >
-                          {{ formatCell(m?.[col]) }}
-                          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                          <i v-if="isFacebookKey(col)" class="fa-brands fa-facebook-f"></i>
+                          <i v-else class="fa-solid fa-globe"></i>
+                          <span class="btnText">{{ isFacebookKey(col) ? "Facebook" : "Website" }}</span>
                         </a>
                       </template>
-                      <template v-else>
-                        {{ formatCell(m?.[col]) }}
-                      </template>
+                      <template v-else>-</template>
                     </template>
 
                     <template v-else>
-                      {{ formatCell(m?.[col]) }}
+                      {{ formatCell(m?.[col], col) }}
                     </template>
                   </td>
 
@@ -353,16 +359,25 @@
                         </div>
                       </div>
 
-                      <!-- ✅ LinkFB / LinkWeb clickable in overlay -->
+                      <!-- ✅ LinkFB / LinkWeb => button with icon (overlay) -->
                       <div v-else-if="isLinkField(item.k)" class="v">
                         <template v-if="safeUrl(item.v)">
-                          <a class="linkCell" :href="safeUrl(item.v)" target="_blank" rel="noopener noreferrer" @click.stop>
-                            {{ item.v }}
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                          <a
+                            class="linkBtn"
+                            :class="isFacebookKey(item.k) ? 'fb' : 'web'"
+                            :href="safeUrl(item.v)"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            @click.stop
+                          >
+                            <i v-if="isFacebookKey(item.k)" class="fa-brands fa-facebook-f"></i>
+                            <i v-else class="fa-solid fa-globe"></i>
+                            <span class="btnText">{{ isFacebookKey(item.k) ? "Facebook" : "Website" }}</span>
                           </a>
+                          <div class="linkRaw">{{ item.v }}</div>
                         </template>
                         <template v-else>
-                          <div>{{ item.v }}</div>
+                          <div>-</div>
                         </template>
 
                         <!-- ✅ Logo under idmember -->
@@ -491,8 +506,6 @@ const navItems = [
   { key: "news", label: "ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ", to: "/newinsert", fa: "fa-solid fa-newspaper" },
   { key: "protocols", label: "ປະກາດຮັບສະມັກພະນັກງານ", to: "/joblist", fa: "fa-solid fa-user-plus" },
   { key: "announcement", label: "ປະກາດ", to: "/announcement", fa: "fa-solid fa-bullhorn" },
-  // { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", fa: "fa-solid fa-people-group" },
-  // { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", fa: "fa-solid fa-users-rectangle" },
 ];
 
 /* =========================
@@ -730,18 +743,91 @@ function lastSegmentKey(k) {
 function isLinkField(k) {
   return LINK_KEYS.has(lastSegmentKey(k).toLowerCase());
 }
+function isFacebookKey(k) {
+  return lastSegmentKey(k).toLowerCase() === "linkfb";
+}
 function safeUrl(input) {
   const raw = String(input ?? "").trim();
   if (!raw || raw === "-") return null;
 
-  // block unsafe protocols
   if (/^(javascript:|data:|vbscript:)/i.test(raw)) return null;
 
   if (/^https?:\/\//i.test(raw)) return raw;
   if (raw.startsWith("//")) return `https:${raw}`;
 
-  // common case: "www.xxx.com" or "facebook.com/..."
   return `https://${raw.replace(/^\/+/, "")}`;
+}
+
+/* =========================
+   ✅ FULL TEXT columns (BanknameLa)
+   ========================= */
+const FULL_TEXT_COL_KEYS = new Set([
+  "banknamela",
+  "bankname_la",
+  "bank_name_la",
+  "banknamel",
+  "bank_name_lao",
+  "banknamelaos",
+]);
+function isFullTextCol(col) {
+  return FULL_TEXT_COL_KEYS.has(String(col || "").toLowerCase());
+}
+
+/* =========================
+   ✅ HIDE these fields everywhere (table + overlay + filter)
+   ========================= */
+const HIDE_UI_KEYS = new Set(
+  [
+    "memberatm",
+    "membermobile",
+    "membercrossborder",
+    "atminquery",
+    "atmcashwithdraw",
+    "atmtransfer",
+    "mobiletransfer",
+    "qrpayment",
+  ].map((x) => x.toLowerCase())
+);
+
+function isHiddenUiKey(k) {
+  return HIDE_UI_KEYS.has(lastSegmentKey(k).toLowerCase());
+}
+function isHiddenUiPath(path) {
+  const p = String(path || "").trim();
+  if (!p) return false;
+  const seg0 = (p.split(".")[0] || "").toLowerCase();
+  return HIDE_UI_KEYS.has(seg0);
+}
+
+/* =========================
+   ✅ TIME helpers
+   ========================= */
+function isTimeKey(k) {
+  return lastSegmentKey(k).toLowerCase() === "time";
+}
+
+function formatDDMMYY(input) {
+  const s = String(input ?? "").trim();
+  if (!s || s === "-") return s || "-";
+
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (m) {
+    const yy = m[1].slice(2);
+    const mm = m[2];
+    const dd = m[3];
+    return `${dd}/${mm}/${yy}`;
+  }
+
+  const ms = Date.parse(s);
+  if (!Number.isNaN(ms)) {
+    const d = new Date(ms);
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yy = String(d.getFullYear()).slice(2);
+    return `${dd}/${mm}/${yy}`;
+  }
+
+  return s;
 }
 
 /* =========================
@@ -810,7 +896,9 @@ function sortMembersOldestFirst(list) {
   const hasDate = list.some((m) => getDateMsFromRow(m) !== null);
 
   const decorated = list.map((item, idx) => {
-    const key = hasDate ? getDateMsFromRow(item) ?? Number.MAX_SAFE_INTEGER : getNumericIdFromRow(item) ?? Number.MAX_SAFE_INTEGER;
+    const key = hasDate
+      ? getDateMsFromRow(item) ?? Number.MAX_SAFE_INTEGER
+      : getNumericIdFromRow(item) ?? Number.MAX_SAFE_INTEGER;
     return { item, idx, key };
   });
 
@@ -939,6 +1027,9 @@ function titleOf(m) {
   return (
     m?.bank_name ??
     m?.bankName ??
+    m?.BanknameLa ??
+    m?.banknameLa ??
+    m?.bank_name_la ??
     m?.name ??
     m?.title ??
     m?.company ??
@@ -950,11 +1041,17 @@ function titleOf(m) {
   );
 }
 
-function formatCell(v) {
+function formatCell(v, col = "") {
   if (v === null || v === undefined) return "-";
   if (typeof v === "boolean") return v ? "true" : "false";
   if (typeof v === "number") return String(v);
-  if (typeof v === "string") return v.length > 40 ? v.slice(0, 40) + "…" : v;
+
+  if (typeof v === "string") {
+    // ✅ BanknameLa show full text (no truncate)
+    if (isFullTextCol(col)) return v;
+    return v.length > 40 ? v.slice(0, 40) + "…" : v;
+  }
+
   if (Array.isArray(v)) return v.length ? `(${v.length}) items` : "-";
   if (typeof v === "object") return "Object";
   return String(v);
@@ -982,6 +1079,9 @@ function toText(v) {
 }
 
 function flattenAny(val, path, out) {
+  // ✅ hard-remove hidden keys (top-level + nested)
+  if (path && isHiddenUiPath(path)) return;
+
   if (val === null || val === undefined) {
     out.push({ k: path || "value", v: "-" });
     return;
@@ -990,11 +1090,22 @@ function flattenAny(val, path, out) {
   const t = typeof val;
 
   if (t === "string" || t === "number" || t === "boolean") {
-    out.push({ k: path || "value", v: String(val) });
+    const key = lastSegmentKey(path || "");
+    const vText = String(val);
+
+    if (key && isTimeKey(key)) {
+      out.push({ k: path || "time", v: formatDDMMYY(vText) });
+      return;
+    }
+
+    out.push({ k: path || "value", v: vText });
     return;
   }
 
   if (Array.isArray(val)) {
+    if (path && /^time\./i.test(path)) return;
+    if (path && isHiddenUiPath(path)) return;
+
     if (isSpecialItemsPath(path)) {
       if (isCrossborderItemsPath(path)) {
         const items = val
@@ -1072,19 +1183,29 @@ function flattenAny(val, path, out) {
   }
 
   if (t === "object") {
+    if (path && /^time\./i.test(path)) return;
+    if (path && isHiddenUiPath(path)) return;
+
     const entries = Object.entries(val);
     if (!entries.length) {
       out.push({ k: path || "value", v: "-" });
       return;
     }
+
     for (const [k, v] of entries) {
       if (k === "password" || k === "pwd") continue;
       if (isImageKey(k)) continue;
 
+      if (isHiddenUiKey(k)) continue; // ✅ hide those keys in overlay
       if (isHiddenOverlayIdKey(k)) continue;
       if (String(k).toLowerCase() === ID_MEMBER_COL) continue;
 
       const p = path ? `${path}.${k}` : k;
+
+      if (isTimeKey(k)) {
+        out.push({ k: p, v: formatDDMMYY(v) });
+        continue;
+      }
 
       if (Array.isArray(v)) {
         flattenAny(v, p, out);
@@ -1238,13 +1359,24 @@ const tableCols = computed(() => {
   const keysSet = new Set();
   members.value.slice(0, 25).forEach((m) => Object.keys(m || {}).forEach((k) => keysSet.add(k)));
 
+  // ✅ remove time + remove specified keys
   const keys = Array.from(keysSet).filter(
-    (k) => !isImageKey(k) && !isBackendIdKey(k) && String(k).toLowerCase() !== ID_MEMBER_COL
+    (k) =>
+      !isImageKey(k) &&
+      !isBackendIdKey(k) &&
+      !isTimeKey(k) &&
+      !isHiddenUiKey(k) &&
+      String(k).toLowerCase() !== ID_MEMBER_COL
   );
 
+  // ✅ force include BanknameLa + Linkfb + Linkweb if exists
   const preferred = [
     "bank_name",
     "bankName",
+    "BanknameLa",
+    "banknameLa",
+    "bank_name_la",
+    "bankname_la",
     "name",
     "code",
     "phone",
@@ -1253,9 +1385,20 @@ const tableCols = computed(() => {
     "address",
     "province",
     "district",
+    "Linkfb",
+    "linkfb",
+    "Linkweb",
+    "linkweb",
     "createdAt",
     "updatedAt",
-  ].filter((k) => !isImageKey(k) && !isBackendIdKey(k) && String(k).toLowerCase() !== ID_MEMBER_COL);
+  ].filter(
+    (k) =>
+      !isImageKey(k) &&
+      !isBackendIdKey(k) &&
+      !isTimeKey(k) &&
+      !isHiddenUiKey(k) &&
+      String(k).toLowerCase() !== ID_MEMBER_COL
+  );
 
   const picked = [];
   for (const k of preferred) if (keys.includes(k) && !picked.includes(k)) picked.push(k);
@@ -1281,6 +1424,8 @@ const filterKeys = computed(() => {
       if (k === "password" || k === "pwd") return;
       if (isImageKey(k)) return;
       if (isBackendIdKey(k)) return;
+      if (isTimeKey(k)) return;
+      if (isHiddenUiKey(k)) return;
       if (String(k).toLowerCase() === ID_MEMBER_COL) return;
       if (typeof v === "object" && v !== null) return;
       set.add(k);
@@ -1292,6 +1437,8 @@ const filterKeys = computed(() => {
 
 function toggleSort(col) {
   if (isIdMemberCol(col)) return;
+  if (isTimeKey(col)) return;
+  if (isHiddenUiKey(col)) return;
 
   if (sortKey.value !== col) {
     sortKey.value = col;
@@ -1447,7 +1594,13 @@ async function fetchMembers() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
-    const list = Array.isArray(data) ? data : Array.isArray(data?.members) ? data.members : Array.isArray(data?.data) ? data.data : [];
+    const list = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.members)
+      ? data.members
+      : Array.isArray(data?.data)
+      ? data.data
+      : [];
 
     members.value = sortMembersOldestFirst(list);
 
@@ -1503,7 +1656,7 @@ function onKey(e) {
 }
 
 /* =========================
-   Mount / Unmount (modern reveal)
+   Mount / Unmount
    ========================= */
 onMounted(async () => {
   window.addEventListener("keydown", onKey);
@@ -1514,10 +1667,8 @@ onMounted(async () => {
   gsapCtx = gsap.context(() => {
     const sel = gsap.utils.selector(rootEl.value);
 
-    // Base set
     gsap.set(sel(".js-reveal"), { autoAlpha: 0, y: 12, filter: "blur(6px)" });
 
-    // Main intro
     const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
     tl.fromTo(
       sidebarEl.value,
@@ -1560,12 +1711,12 @@ onBeforeUnmount(() => {
 * {
   box-sizing: border-box;
 }
-#add_member{
- background-color: #28a475;
+#add_member {
+  background-color: #28a475;
 }
-#add_member:hover{
- background-color: #1e6f56;
- transition: background-color 0.3s ease;
+#add_member:hover {
+  background-color: #1e6f56;
+  transition: background-color 0.3s ease;
 }
 .app.tech {
   --bg0: #050914;
@@ -2034,33 +2185,55 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.86);
   font-weight: 800;
 }
+.td.fullText {
+  /* ✅ allow full BanknameLa text */
+  white-space: normal;
+  word-break: break-word;
+}
 .tdLast {
   width: 320px;
 }
 
-/* ✅ Link style */
-.linkCell {
-  color: rgba(56, 189, 248, 0.95);
-  text-decoration: none;
-  font-weight: 900;
+/* ✅ Link button (Linkfb/Linkweb) */
+.linkBtn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 950;
+  text-decoration: none;
+  line-height: 1;
   max-width: 100%;
 }
-.linkCell:hover {
-  text-decoration: underline;
+.linkBtn:hover {
+  border-color: rgba(56, 189, 248, 0.22);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 30px rgba(56, 189, 248, 0.08);
 }
-.linkCell i {
+.linkBtn.fb {
+  border-color: rgba(24, 119, 242, 0.26);
+}
+.linkBtn.fb:hover {
+  border-color: rgba(24, 119, 242, 0.55);
+  box-shadow: 0 12px 30px rgba(24, 119, 242, 0.12);
+}
+.linkBtn.web {
+  border-color: rgba(56, 189, 248, 0.22);
+}
+.btnText {
   font-size: 12px;
-  opacity: 0.85;
+  font-weight: 950;
+  letter-spacing: 0.2px;
 }
-
-.empty {
-  padding: 18px;
-  text-align: center;
+.linkRaw {
+  margin-top: 8px;
+  font-size: 12px;
   color: var(--muted);
-  font-weight: 900;
+  word-break: break-all;
 }
 
 /* Actions */
@@ -2097,6 +2270,13 @@ onBeforeUnmount(() => {
 }
 .pillBtn.danger:hover {
   border-color: rgba(239, 68, 68, 0.45);
+}
+
+.empty {
+  padding: 18px;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 900;
 }
 
 /* Pagination */
@@ -2406,7 +2586,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
 }
 
-/* Confirm Modal + Toast */
+/* Confirm Modal + Toast (เดิมทั้งหมด) */
 .confirmOverlay {
   position: fixed;
   inset: 0;

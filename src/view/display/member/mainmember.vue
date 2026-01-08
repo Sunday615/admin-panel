@@ -4,49 +4,7 @@
     <div class="glow glow-b"></div>
 
     <main class="layout">
-      <aside ref="sideEl" class="sidebar js-side">
-        <router-link to="/" style="text-decoration: none;">
-          <div class="brand js-reveal">
-            <div class="brandMark">
-              <img src="/logolapnet/fullcircle.png" alt="" style="width: 100%; height: 100%" />
-            </div>
-            <div class="brandText">
-              <div class="brandName">LAPNet</div>
-              <div class="brandSub">Admin Console</div>
-            </div>
-          </div>
-        </router-link>
-
-        <nav class="nav">
-          <RouterLink
-            v-for="item in navItems"
-            :key="item.key"
-            :to="item.to"
-            class="navItem js-sideItem"
-            active-class="active"
-            @mouseenter="navHover($event, true)"
-            @mouseleave="navHover($event, false)"
-          >
-            <span class="navIcon"><i :class="item.icon"></i></span>
-            <span class="navLabel">{{ item.label }}</span>
-            <span class="navPill" />
-          </RouterLink>
-        </nav>
-
-        <div class="spacer"></div>
-
-        <button
-          class="logout js-sideItem"
-          type="button"
-          @click="logout"
-          @mouseenter="btnHover($event, true)"
-          @mouseleave="btnHover($event, false)"
-        >
-          <span class="navIcon"><i class="fa-solid fa-right-from-bracket"></i></span>
-          Log Out
-        </button>
-      </aside>
-
+      <!-- ✅ Sidebar removed -->
       <section class="content">
         <header ref="headEl" class="head js-reveal">
           <div class="headLeft">
@@ -116,9 +74,7 @@
 
               <div class="colorRow js-reveal">
                 <div class="colorPick">
-                  <div class="colorLabel">
-                    <i class="fa-solid fa-droplet"></i> Color A
-                  </div>
+                  <div class="colorLabel"><i class="fa-solid fa-droplet"></i> Color A</div>
                   <div class="colorWrap">
                     <input v-model="form.gradA" class="colorInp" type="color" />
                     <input v-model.trim="form.gradA" class="hexInp inp" type="text" placeholder="#38bdf8" />
@@ -126,9 +82,7 @@
                 </div>
 
                 <div class="colorPick">
-                  <div class="colorLabel">
-                    <i class="fa-solid fa-droplet"></i> Color B
-                  </div>
+                  <div class="colorLabel"><i class="fa-solid fa-droplet"></i> Color B</div>
                   <div class="colorWrap">
                     <input v-model="form.gradB" class="colorInp" type="color" />
                     <input v-model.trim="form.gradB" class="hexInp inp" type="text" placeholder="#6366f1" />
@@ -136,9 +90,7 @@
                 </div>
 
                 <div class="gradSwatch" :style="gradientSwatchStyle">
-                  <div class="swatchText">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Preview
-                  </div>
+                  <div class="swatchText"><i class="fa-solid fa-wand-magic-sparkles"></i> Preview</div>
                 </div>
               </div>
 
@@ -181,7 +133,7 @@
                     :title="isAllSelected('atm') ? 'Clear all' : 'Select all'"
                   >
                     <i class="fa-solid" :class="isAllSelected('atm') ? 'fa-xmark' : 'fa-check-double'"></i>
-                    {{ isAllSelected('atm') ? "Clear all" : "Select all" }}
+                    {{ isAllSelected("atm") ? "Clear all" : "Select all" }}
                   </button>
 
                   <button
@@ -215,7 +167,7 @@
               <div v-if="errors.filterproduct" class="err">{{ errors.filterproduct }}</div>
             </div>
 
-            <!-- ✅ Mbbanking (✅ ADDED: Select all / Clear) -->
+            <!-- ✅ Mbbanking -->
             <div class="label">
               <div class="labelTopRow">
                 <span>ສະມາຊິກລະບົບຊຳລະຂ້າມທະນາຄານເທິງມືຖື</span>
@@ -231,7 +183,7 @@
                     :title="isAllSelected('mobile') ? 'Clear all' : 'Select all'"
                   >
                     <i class="fa-solid" :class="isAllSelected('mobile') ? 'fa-xmark' : 'fa-check-double'"></i>
-                    {{ isAllSelected('mobile') ? "Clear all" : "Select all" }}
+                    {{ isAllSelected("mobile") ? "Clear all" : "Select all" }}
                   </button>
 
                   <button
@@ -265,7 +217,7 @@
               <div v-if="errors.filterproduct" class="err">{{ errors.filterproduct }}</div>
             </div>
 
-            <!-- ✅ Crossborder (✅ ADDED: Select all / Clear) -->
+            <!-- ✅ Crossborder -->
             <div class="label">
               <div class="labelTopRow">
                 <span>ສະມາຊິກລະບົບຊຳລະຂ້າມແດນຜ່ານ QR CODE</span>
@@ -281,7 +233,7 @@
                     :title="isAllSelected('crossborder') ? 'Clear all' : 'Select all'"
                   >
                     <i class="fa-solid" :class="isAllSelected('crossborder') ? 'fa-xmark' : 'fa-check-double'"></i>
-                    {{ isAllSelected('crossborder') ? "Clear all" : "Select all" }}
+                    {{ isAllSelected("crossborder") ? "Clear all" : "Select all" }}
                   </button>
 
                   <button
@@ -502,7 +454,6 @@ const api = axios.create({ baseURL: "" });
 const router = useRouter();
 const route = useRoute();
 
-const sideEl = ref(null);
 const headEl = ref(null);
 const cardEl = ref(null);
 const actionsEl = ref(null);
@@ -595,16 +546,6 @@ async function goOverlay() {
 function onKey(e) {
   if (e.key === "Escape" && overlay.show) closeOverlay();
 }
-
-const navItems = [
-  { key: "dashboard", label: "ພາບລວມ", to: "/dashboard", icon: "fa-solid fa-chart-line" },
-  { key: "member", label: "ເພີ່ມທະນາຄານສະມາຊິກ", to: "/memberinsert", icon: "fa-solid fa-building-columns" },
-  { key: "news", label: "ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ", to: "/newinsert", icon: "fa-solid fa-newspaper" },
-  { key: "joblist", label: "ປະກາດຮັບສະມັກພະນັກງານ", to: "/joblist", icon: "fa-solid fa-user-plus" },
-  { key: "announcement", label: "ປະກາດ", to: "/announcement", icon: "fa-solid fa-bullhorn" },
-  // { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", icon: "fa-solid fa-people-group" },
-  // { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", icon: "fa-solid fa-users-rectangle" },
-];
 
 const productOptionsATM = [
   "ກວດສອບຍອດເງິນຂ້າມທະນາຄານຜ່ານຕູ້ ATM",
@@ -733,10 +674,6 @@ let lastObjectUrl = "";
 
 function goBack() {
   router.back();
-}
-
-function logout() {
-  console.log("logout");
 }
 
 function setError(key, msg) {
@@ -880,11 +817,6 @@ async function onSubmit() {
 
     console.log("INSERT OK:", data);
     console.log("SENT FLAGS:", memberFlags.value);
-    console.log("SENT ITEMS:", {
-      CardATM: form.CardATM.items,
-      Mbbanking: form.Mbbanking.items,
-      Crossborder: form.Crossborder.items,
-    });
 
     gsap.to(actionsEl.value, { y: -2, duration: 0.18, yoyo: true, repeat: 1, ease: "power2.out" });
 
@@ -917,27 +849,22 @@ function btnHover(e, enter) {
 function chipHover(e, enter) {
   gsap.to(e.currentTarget, { scale: enter ? 1.02 : 1, duration: 0.18, ease: "power2.out" });
 }
-function navHover(e, enter) {
-  const el = e.currentTarget;
-  if (el.classList.contains("active")) return;
-  gsap.to(el, { x: enter ? 3 : 0, duration: 0.18, ease: "power2.out" });
-}
 
 onMounted(() => {
   window.addEventListener("keydown", onKey);
 
   applyPresetFromRoute();
 
-  gsap.set(".js-side", { opacity: 0, x: -18 });
-  gsap.set(".js-sideItem", { opacity: 0, y: 10 });
+  // ✅ sidebar animations removed
   gsap.set(".js-card", { opacity: 0, y: 14, scale: 0.985 });
   gsap.set(".js-reveal", { opacity: 0, y: 10 });
 
   const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-  tl.to(".js-side", { opacity: 1, x: 0, duration: 0.55 }, 0)
-    .to(".js-sideItem", { opacity: 1, y: 0, stagger: 0.06, duration: 0.42 }, 0.12)
-    .to(".js-card", { opacity: 1, y: 0, scale: 1, duration: 0.55 }, 0.12)
-    .to(".js-reveal", { opacity: 1, y: 0, stagger: 0.06, duration: 0.45 }, 0.18);
+  tl.to(".js-card", { opacity: 1, y: 0, scale: 1, duration: 0.55 }, 0.05).to(
+    ".js-reveal",
+    { opacity: 1, y: 0, stagger: 0.06, duration: 0.45 },
+    0.12
+  );
 });
 
 watch(
@@ -1021,168 +948,13 @@ onBeforeUnmount(() => {
 }
 
 /* =========================
-   LAYOUT: sidebar + content
+   LAYOUT (no sidebar)
    ========================= */
 .layout {
-  display: grid;
-  grid-template-columns: 270px 1fr;
-  gap: 14px;
-  align-items: start;
-}
-
-/* Sidebar */
-.sidebar {
-  position: sticky;
-  top: 18px;
-  height: calc(100vh - 36px);
-  border-radius: 22px;
-  padding: 16px;
-  background: rgba(8, 12, 28, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.sidebar::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  background: linear-gradient(
-    90deg,
-    rgba(56, 189, 248, 0.45),
-    rgba(99, 102, 241, 0.22),
-    rgba(14, 165, 233, 0.2),
-    rgba(56, 189, 248, 0.45)
-  );
-  opacity: 0.14;
-  filter: blur(14px);
-  pointer-events: none;
-  animation: holo 7s linear infinite;
-}
-
-@keyframes holo {
-  0% {
-    transform: translateX(-16%);
-  }
-  100% {
-    transform: translateX(16%);
-  }
-}
-
-.brand {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brandMark {
-  width: 50px;
-  height: 50px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.5), rgba(99, 102, 241, 0.28));
-  border: 1px solid #fff;
-  box-shadow: 0 18px 40px rgba(56, 189, 248, 0.12);
-}
-
-.brandName {
-  font-weight: 900;
-  letter-spacing: 0.2px;
-}
-
-.brandSub {
-  margin-top: 2px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.nav {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 2px;
-}
-
-.navItem {
-  text-decoration: none;
-  position: relative;
   width: 100%;
-  border-radius: 14px;
-  padding: 12px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.78);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-}
+  max-width: 1280px;
 
-.navItem:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.92);
-  border-color: rgba(56, 189, 248, 0.22);
-  box-shadow: 0 12px 30px rgba(56, 189, 248, 0.1);
-}
-
-.navItem.active {
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.22), rgba(99, 102, 241, 0.14));
-  color: rgba(255, 255, 255, 0.95);
-  border-color: rgba(56, 189, 248, 0.24);
-  box-shadow: 0 18px 40px rgba(56, 189, 248, 0.12);
-}
-
-.navIcon {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.navLabel {
-  font-weight: 800;
-  font-size: 13px;
-}
-
-.navPill {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(56, 189, 248, 0);
-}
-
-.navItem.active .navPill {
-  background: rgba(56, 189, 248, 0.95);
-  box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.14);
-}
-
-.spacer {
-  flex: 1;
-}
-
-.logout {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.78);
-  border-radius: 14px;
-  padding: 12px 12px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  cursor: pointer;
-  position: relative;
+  margin: 0 auto;
 }
 
 /* Right content area */
@@ -1271,6 +1043,15 @@ onBeforeUnmount(() => {
   animation: holo 7s linear infinite;
 }
 
+@keyframes holo {
+  0% {
+    transform: translateX(-16%);
+  }
+  100% {
+    transform: translateX(16%);
+  }
+}
+
 .cardTop {
   display: flex;
   align-items: flex-start;
@@ -1313,7 +1094,7 @@ onBeforeUnmount(() => {
   margin-bottom: 8px;
 }
 
-/* ✅ label row actions (Select all) */
+/* ✅ label row actions */
 .labelTopRow {
   display: flex;
   align-items: center;
@@ -1761,7 +1542,7 @@ onBeforeUnmount(() => {
 }
 
 /* =========================
-   ✅ OVERLAY ALERT (BIG, MODERN)
+   ✅ OVERLAY ALERT
    ========================= */
 .ov {
   position: fixed;
@@ -1943,28 +1724,7 @@ onBeforeUnmount(() => {
 }
 
 /* responsive */
-@media (max-width: 1100px) {
-  .layout {
-    grid-template-columns: 86px 1fr;
-  }
-  .brandText,
-  .navLabel {
-    display: none;
-  }
-  .sidebar {
-    padding: 14px 10px;
-  }
-}
-
 @media (max-width: 980px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-  .sidebar {
-    position: relative;
-    height: auto;
-    top: auto;
-  }
   .row {
     grid-template-columns: 1fr;
   }

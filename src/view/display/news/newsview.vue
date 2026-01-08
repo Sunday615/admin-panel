@@ -112,7 +112,6 @@
               <b>{{ rows.length }}</b>
             </div>
 
-            <!-- ✅ Pagination info pill -->
             <div class="metaPill" v-if="!loading && !error && rows.length">
               <i class="fa-solid fa-book-open"></i>
               <span>ໜ້າ:</span>
@@ -120,10 +119,10 @@
             </div>
 
             <router-link to="/newinsert">
-            <div class="metaPill" id="add_news">
-              <i class="fa-solid fa-plus"></i>
-              <span>ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ</span>
-            </div>
+              <div class="metaPill" id="add_news">
+                <i class="fa-solid fa-plus"></i>
+                <span>ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ</span>
+              </div>
             </router-link>
           </div>
 
@@ -141,7 +140,6 @@
                     </span>
                   </th>
 
-                  <!-- ✅ Actions column -->
                   <th class="th thLast">Actions</th>
                 </tr>
               </thead>
@@ -150,26 +148,38 @@
                 <tr v-for="(n, idx) in pagedRows" :key="rowKey(n, idx)" class="tr js-reveal rowAnim"
                   @click="openOverlay(n)" @mouseenter="rowHover($event, true)" @mouseleave="rowHover($event, false)">
                   <td v-for="col in tableCols" :key="col" class="td" :class="{ colWide: isTitleCol(col) }">
-                    <!-- ✅ idnews => running number (with pagination offset) -->
+                    <!-- NO -->
                     <template v-if="isNoCol(col)">
                       {{ rowOffset + idx + 1 }}
                     </template>
 
+                    <!-- Title -->
                     <template v-else-if="isTitleCol(col)">
                       <div class="titleCell">
-                        <div class="tMain">{{ formatCell(n?.[col], col) }}</div>
-
+                        <!-- รูปอยู่ซ้าย -->
                         <img v-if="heroUrlOf(n)" class="thumbMini" :src="heroUrlOf(n)" alt="Hero"
                           @click.stop="openOverlay(n)" />
+
+                        <!-- header_news อยู่ขวา -->
+                        <div class="titleText">
+                          <div class="tMain">{{ formatCell(n?.[col], col) }}</div>
+                        </div>
                       </div>
                     </template>
 
+
+                    <!-- Date dd/mm/yy -->
+                    <template v-else-if="isDateTimeCol(col)">
+                      {{ formatDDMMYY(n?.[col]) }}
+                    </template>
+
+                    <!-- Default -->
                     <template v-else>
                       {{ formatCell(n?.[col], col) }}
                     </template>
                   </td>
 
-                  <!-- ✅ Actions -->
+                  <!-- Actions -->
                   <td class="td tdLast">
                     <div class="actionRow">
                       <button class="pillBtn" type="button" title="View" @click.stop="openOverlay(n)"
@@ -202,7 +212,7 @@
             </table>
           </div>
 
-          <!-- ✅ Pagination (7 per page) -->
+          <!-- Pagination -->
           <div ref="pagerEl" class="pager js-reveal" v-if="!loading && !error && rows.length > PAGE_SIZE">
             <div class="pagerInfo">
               Showing <b>{{ showingStart }}</b>–<b>{{ showingEnd }}</b> of <b>{{ rows.length }}</b>
@@ -276,6 +286,7 @@
                     </div>
                   </div>
 
+                  <!-- TAGS (still shown in overlay, not in table column) -->
                   <div v-if="tagsOf(selected).length" class="tagBlock">
                     <div class="tagTitle"><i class="fa-solid fa-tags"></i> Tags</div>
 
@@ -313,7 +324,7 @@
             </div>
           </Teleport>
 
-          <!-- ✅ Confirm Edit Modal -->
+          <!-- Confirm Edit Modal -->
           <Teleport to="body">
             <div v-if="editOpen" class="confirmOverlay" @click.self="closeEdit">
               <div ref="editEl" class="confirmCard edit">
@@ -334,14 +345,13 @@
 
                 <div class="confirmActions">
                   <button class="cBtn ghost" type="button" @click="closeEdit">Cancel</button>
-
                   <button class="cBtn primary" type="button" @click="confirmEdit">Yes, Edit</button>
                 </div>
               </div>
             </div>
           </Teleport>
 
-          <!-- ✅ Cool Confirm Delete Modal (MembersList style) -->
+          <!-- Cool Confirm Delete Modal -->
           <Teleport to="body">
             <div v-if="confirmOpen" class="confirmOverlay" @click.self="closeConfirm">
               <div ref="confirmEl" class="confirmCard">
@@ -374,7 +384,7 @@
             </div>
           </Teleport>
 
-          <!-- ✅ Toast -->
+          <!-- Toast -->
           <Teleport to="body">
             <div v-if="toast.open" class="toast" :class="toast.type">
               <i v-if="toast.type === 'success'" class="fa-solid fa-circle-check"></i>
@@ -398,8 +408,8 @@ const router = useRouter();
 const sidebarEl = ref(null);
 const topbarEl = ref(null);
 
-const tbodyEl = ref(null); // ✅ table body ref for page animations
-const pagerEl = ref(null); // ✅ pager ref for subtle entrance
+const tbodyEl = ref(null);
+const pagerEl = ref(null);
 
 const userName = "Arkhan";
 
@@ -436,7 +446,7 @@ const imgViewer = reactive({ open: false, src: "" });
 let abortCtrl = null;
 
 /* =========================
-   ✅ Pagination (7 per page)
+   Pagination (7 per page)
    ========================= */
 const PAGE_SIZE = 7;
 const page = ref(1);
@@ -447,7 +457,6 @@ function clamp(n, a, b) {
   return Math.min(Math.max(n, a), b);
 }
 
-/* ✅ micro "tap" animation for pager buttons */
 function tap(el) {
   if (!el) return;
   gsap.fromTo(el, { scale: 0.98 }, { scale: 1, duration: 0.18, ease: "power2.out" });
@@ -459,7 +468,6 @@ function goPage(p, ev) {
   page.value = clamp(Number(p) || 1, 1, tp);
 }
 
-/* ✅ modern page transition for table rows */
 async function animateRows(direction = 1) {
   await nextTick();
   const root = tbodyEl.value;
@@ -484,7 +492,7 @@ async function animatePagerIn() {
 }
 
 /* =========================
-   ✅ Busy state per row
+   Busy state per row
    ========================= */
 const busyById = ref({});
 function setBusy(id, v) {
@@ -496,7 +504,7 @@ function isBusy(n) {
 }
 
 /* =========================
-   ✅ Cool Confirm Delete state
+   Confirm Delete state
    ========================= */
 const confirmOpen = ref(false);
 const confirmLoading = ref(false);
@@ -506,7 +514,7 @@ const confirmEl = ref(null);
 const confirmName = computed(() => titleOf(confirmTarget.value));
 
 /* =========================
-   ✅ Confirm Edit state
+   Confirm Edit state
    ========================= */
 const editOpen = ref(false);
 const editTarget = ref(null);
@@ -514,7 +522,7 @@ const editEl = ref(null);
 
 const editName = computed(() => titleOf(editTarget.value));
 
-/* ✅ Toast */
+/* Toast */
 const toast = ref({ open: false, type: "success", text: "" });
 let toastTimer = null;
 
@@ -530,6 +538,9 @@ function logout() {
   console.log("logout");
 }
 
+/* =========================
+   Helpers (date / tags / media)
+   ========================= */
 function safeJsonParse(s) {
   try {
     return JSON.parse(s);
@@ -545,6 +556,31 @@ function resolveMediaUrl(src) {
   if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("data:")) return s;
   if (s.startsWith("/")) return `${API_BASE}${s}`;
   return `${API_BASE}/${s}`;
+}
+
+function formatDDMMYY(input) {
+  const s = String(input ?? "").trim();
+  if (!s || s === "-") return "-";
+
+  // YYYY-MM-DD or YYYY-MM-DD HH:mm:ss or ISO
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+  if (m) {
+    const yy = m[1].slice(2);
+    const mm = m[2];
+    const dd = m[3];
+    return `${dd}/${mm}/${yy}`;
+  }
+
+  const ms = Date.parse(s);
+  if (!Number.isNaN(ms)) {
+    const d = new Date(ms);
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yy = String(d.getFullYear()).slice(2);
+    return `${dd}/${mm}/${yy}`;
+  }
+
+  return s;
 }
 
 /* images */
@@ -599,12 +635,12 @@ function galleryUrlsOf(n) {
 function tagsOf(n) {
   const raw = n?.tags ?? n?.tag ?? n?.keywords;
   if (!raw) return [];
-  if (Array.isArray(raw)) return raw.map((x) => String(x)).filter(Boolean);
+  if (Array.isArray(raw)) return raw.map((x) => String(x).trim()).filter(Boolean);
 
   if (typeof raw === "string") {
     const s = raw.trim();
     const maybe = safeJsonParse(s);
-    if (Array.isArray(maybe)) return maybe.map((x) => String(x)).filter(Boolean);
+    if (Array.isArray(maybe)) return maybe.map((x) => String(x).trim()).filter(Boolean);
     if (s.includes(",")) return s.split(",").map((x) => x.trim()).filter(Boolean);
     return [s];
   }
@@ -612,25 +648,33 @@ function tagsOf(n) {
   return [];
 }
 
-/* ✅ remove sub_header column */
+/* =========================
+   Key filters
+   ========================= */
 function isSubHeaderKey(k) {
   const s = String(k || "").toLowerCase();
   return s === "sub_header" || s === "subheader" || s === "sub-header";
 }
 
-/* ✅ hide ids in overlay kv viewer */
+function isCreatedAtKey(k) {
+  const s = String(k || "").toLowerCase();
+  return s === "createdat" || s === "created_at" || s === "create_at" || s === "created";
+}
+function isUpdatedAtKey(k) {
+  const s = String(k || "").toLowerCase();
+  return s === "updatedat" || s === "updated_at" || s === "update_at" || s === "updated";
+}
+
 function isIdKey(k) {
   const s = String(k || "").toLowerCase();
   return s === "idnews" || s === "news_id" || s === "newsid" || s === "id" || s === "_id" || s === "uuid";
 }
 
-/* ✅ hide tags field in overlay kv viewer (keep only tagBlock) */
 function isTagKey(k) {
   const s = String(k || "").toLowerCase();
   return s === "tags" || s === "tag" || s === "keywords";
 }
 
-/* hide raw image/gallery keys in table/filters/overlay fields */
 function isImageKey(k) {
   const s = String(k || "").toLowerCase();
   return (
@@ -651,6 +695,15 @@ function isGalleryKey(k) {
   return String(k || "").toLowerCase().includes("gallery");
 }
 
+function isDateTimeCol(k) {
+  const s = String(k || "").toLowerCase();
+  return s === "date_time" || s === "date-time" || s === "datetime" || s === "datetime";
+}
+
+function dateValueOf(n) {
+  return n?.date_time ?? n?.dateTime ?? n?.datetime ?? n?.timestamp ?? "-";
+}
+
 function rowKey(n, i) {
   return n?.idnews ?? n?.news_id ?? n?.newsId ?? n?.id ?? n?._id ?? n?.uuid ?? `${i}`;
 }
@@ -664,22 +717,27 @@ function isTitleCol(k) {
   return s === "header_news" || s === "title" || s === "headline";
 }
 
-/* ✅ ONLY CHANGE: idnews column becomes NO label + running number */
 function isNoCol(k) {
   return String(k || "").toLowerCase() === "idnews";
 }
+
 function colLabel(k) {
-  return isNoCol(k) ? "NO" : k;
+  if (isNoCol(k)) return "NO";
+  if (isDateTimeCol(k)) return "Date";
+  return k;
 }
 
-/* ✅ show full header_news (no truncate) */
+/* =========================
+   Formatting
+   ========================= */
 function formatCell(v, col) {
   if (v === null || v === undefined) return "-";
   if (typeof v === "boolean") return v ? "true" : "false";
   if (typeof v === "number") return String(v);
 
   if (typeof v === "string") {
-    if (isTitleCol(col)) return v;
+    if (isTitleCol(col)) return v; // show full title
+    if (isDateTimeCol(col)) return formatDDMMYY(v);
     const s = v.trim();
     return s.length > 46 ? s.slice(0, 46) + "…" : s;
   }
@@ -689,7 +747,9 @@ function formatCell(v, col) {
   return String(v);
 }
 
-/* Flatten overlay fields (skip gallery + image + ids + tags fields) */
+/* =========================
+   Overlay flatten (hide ids + tags + created/updated + images)
+   ========================= */
 function toText(v) {
   if (v === null || v === undefined) return "-";
   if (typeof v === "boolean") return v ? "true" : "false";
@@ -719,6 +779,11 @@ function flattenAny(val, path, out) {
   const t = typeof val;
 
   if (t === "string" || t === "number" || t === "boolean") {
+    const lk = String(path || "").toLowerCase();
+    if (lk.endsWith("date_time") || lk.endsWith("datetime")) {
+      out.push({ k: path || "date_time", v: formatDDMMYY(val) });
+      return;
+    }
     out.push({ k: path || "value", v: String(val) });
     return;
   }
@@ -739,7 +804,8 @@ function flattenAny(val, path, out) {
       const lk = String(k || "").toLowerCase();
       if (lk === "password" || lk === "pwd") continue;
       if (isIdKey(k)) continue;
-      if (isTagKey(k)) continue;
+      if (isTagKey(k)) continue; // keep tags only in tagBlock
+      if (isCreatedAtKey(k) || isUpdatedAtKey(k)) continue;
       if (isGalleryKey(k)) continue;
       if (isImageKey(k)) continue;
 
@@ -747,7 +813,10 @@ function flattenAny(val, path, out) {
       if (p.toLowerCase().includes(".gallery")) continue;
 
       if (v && typeof v === "object") flattenAny(v, p, out);
-      else out.push({ k: p, v: toText(v) });
+      else {
+        if (String(k).toLowerCase() === "date_time") out.push({ k: p, v: formatDDMMYY(v) });
+        else out.push({ k: p, v: toText(v) });
+      }
     }
     return;
   }
@@ -760,7 +829,7 @@ const flatEntries = computed(() => {
   const out = [];
   flattenAny(selected.value, "", out);
 
-  const pri = ["header_news", "title", "category", "date_time", "createdAt", "updatedAt", "description_news", "content"];
+  const pri = ["header_news", "title", "category", "date_time", "description_news", "content"];
   out.sort((a, b) => {
     const ia = pri.findIndex((x) => a.k.toLowerCase().endsWith(x));
     const ib = pri.findIndex((x) => b.k.toLowerCase().endsWith(x));
@@ -772,62 +841,73 @@ const flatEntries = computed(() => {
   return out;
 });
 
-/* ✅ table columns (remove sub_header) */
+/* =========================
+   Columns (Tags column removed)
+   - ✅ remove created_at / updated_at
+   - ✅ do NOT include tags column in table
+   ========================= */
+function pickFirstExisting(keysSet, candidates) {
+  for (const c of candidates) if (keysSet.has(c)) return c;
+  return null;
+}
+
 const tableCols = computed(() => {
   if (!news.value.length) return ["idnews", "header_news", "category", "date_time"];
 
   const keysSet = new Set();
-  news.value.slice(0, 30).forEach((n) => Object.keys(n || {}).forEach((k) => keysSet.add(k)));
+  news.value.slice(0, 40).forEach((n) => Object.keys(n || {}).forEach((k) => keysSet.add(k)));
 
-  const keys = Array.from(keysSet).filter((k) => !isImageKey(k) && !isGalleryKey(k) && !isSubHeaderKey(k));
+  const cleaned = new Set(
+    Array.from(keysSet).filter(
+      (k) =>
+        !isImageKey(k) &&
+        !isGalleryKey(k) &&
+        !isSubHeaderKey(k) &&
+        !isCreatedAtKey(k) &&
+        !isUpdatedAtKey(k)
+    )
+  );
 
-  const preferred = [
-    "idnews",
-    "news_id",
-    "newsId",
-    "id",
-    "_id",
-    "header_news",
-    "title",
-    "headline",
-    "category",
-    "date_time",
-    "createdAt",
-    "updatedAt",
-    "timestamp",
-  ].filter((k) => keys.includes(k));
+  const noKey = cleaned.has("idnews")
+    ? "idnews"
+    : pickFirstExisting(cleaned, ["news_id", "newsId", "id", "_id"]) || "idnews";
 
-  const picked = [];
-  for (const k of preferred) if (!picked.includes(k)) picked.push(k);
+  const titleKey = pickFirstExisting(cleaned, ["header_news", "title", "headline"]) || "header_news";
+  const catKey = pickFirstExisting(cleaned, ["category", "type", "group"]);
+  const dateKey = pickFirstExisting(cleaned, ["date_time", "dateTime", "datetime", "timestamp"]) || "date_time";
 
-  const sample = news.value[0] || {};
-  for (const k of keys) {
-    if (picked.length >= 7) break;
-    const v = sample[k];
-    if (typeof v === "object" && v !== null) continue;
-    if (!picked.includes(k)) picked.push(k);
-  }
-
-  return picked.slice(0, 7);
+  return [noKey, titleKey, catKey, dateKey].filter(Boolean);
 });
 
-/* ✅ filter dropdown (remove sub_header too) */
+/* filter dropdown: can still include tags for filtering (no table column) */
 const filterKeys = computed(() => {
   if (!news.value.length) return [];
   const set = new Set();
-  news.value.slice(0, 40).forEach((n) => {
+
+  news.value.slice(0, 60).forEach((n) => {
     Object.entries(n || {}).forEach(([k, v]) => {
-      if (k === "password" || k === "pwd") return;
-      if (isImageKey(k)) return;
-      if (isGalleryKey(k)) return;
-      if (isSubHeaderKey(k)) return;
+      const lk = String(k || "").toLowerCase();
+      if (lk === "password" || lk === "pwd") return;
+      if (isImageKey(k) || isGalleryKey(k) || isSubHeaderKey(k)) return;
+      if (isCreatedAtKey(k) || isUpdatedAtKey(k)) return;
+
+      // allow tags in filter
+      if (isTagKey(k)) {
+        set.add(k);
+        return;
+      }
+
       if (typeof v === "object" && v !== null) return;
       set.add(k);
     });
   });
+
   return Array.from(set).sort((a, b) => a.localeCompare(b));
 });
 
+/* =========================
+   Filter + sort
+   ========================= */
 function normalize(v) {
   if (v === null || v === undefined) return "";
   return String(v).toLowerCase();
@@ -866,7 +946,6 @@ const rows = computed(() => {
   return arr;
 });
 
-/* ✅ Pagination derived from filtered/sorted rows */
 const totalPages = computed(() => Math.max(1, Math.ceil(rows.value.length / PAGE_SIZE)));
 
 const pagedRows = computed(() => {
@@ -890,12 +969,10 @@ const pageRange = computed(() => {
   return { start, end, pages };
 });
 
-/* Reset page when query/filter/sort changes */
 watch([q, filterKey, filterValue, sortKey, sortDir], () => {
   page.value = 1;
 });
 
-/* ✅ clamp page + animate rows when data view changes */
 watch(
   rows,
   async () => {
@@ -903,16 +980,12 @@ watch(
     if (page.value > tp) page.value = tp;
     if (page.value < 1) page.value = 1;
 
-    // modern reveal after filter/sort/search/fetch
     await animateRows(1);
-
-    // pager appears/disappears nicely
     if (tp > 1) await animatePagerIn();
   },
   { immediate: true }
 );
 
-/* ✅ animate row transition on page changes (left/right slide) */
 watch(page, async (p, old) => {
   const dir = p >= (old ?? 1) ? 1 : -1;
   await animateRows(dir);
@@ -920,6 +993,9 @@ watch(page, async (p, old) => {
 });
 
 function toggleSort(col) {
+  // prevent sorting by NO (running number)
+  if (isNoCol(col)) return;
+
   if (sortKey.value !== col) {
     sortKey.value = col;
     sortDir.value = "asc";
@@ -938,14 +1014,13 @@ function clearFilters() {
 }
 
 /* =========================
-   ✅ Actions
+   Actions
    ========================= */
 function editNews(n) {
   const id = rowKey(n, "");
   router.push({ path: "/newsedit", query: { id: String(id ?? "") } });
 }
 
-/* ✅ Edit confirm flow */
 async function askEdit(n) {
   editTarget.value = n;
   editOpen.value = true;
@@ -970,7 +1045,6 @@ function confirmEdit() {
   editNews(n);
 }
 
-/* ✅ Cool confirm delete flow */
 async function askDelete(n) {
   confirmTarget.value = n;
   confirmOpen.value = true;
@@ -1029,11 +1103,7 @@ async function openOverlay(n) {
   await nextTick();
 
   gsap.fromTo(overlayEl.value, { opacity: 0 }, { opacity: 1, duration: 0.16, ease: "power2.out" });
-  gsap.fromTo(
-    modalEl.value,
-    { opacity: 0, y: 12, scale: 0.985 },
-    { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "power2.out" }
-  );
+  gsap.fromTo(modalEl.value, { opacity: 0, y: 12, scale: 0.985 }, { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "power2.out" });
 }
 
 function closeOverlay() {
@@ -1075,13 +1145,7 @@ async function fetchNews() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
-    const list = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.news)
-        ? data.news
-        : Array.isArray(data?.data)
-          ? data.data
-          : [];
+    const list = Array.isArray(data) ? data : Array.isArray(data?.news) ? data.news : Array.isArray(data?.data) ? data.data : [];
 
     news.value = list;
     page.value = 1;
@@ -1091,7 +1155,6 @@ async function fetchNews() {
       gsap.to(".membersPage .js-reveal", { opacity: 1, y: 0, duration: 0.42, stagger: 0.04, ease: "power3.out" });
     });
 
-    // ✅ modern row reveal after fetch
     await animateRows(1);
   } catch (err) {
     if (err?.name === "AbortError") return;
@@ -1150,23 +1213,22 @@ onBeforeUnmount(() => {
 });
 </script>
 
+
 <style scoped>
 /* ======= SMALL UPDATES: reduce header column size + actions column ======= */
-
-/* ✅ smaller table header (ลดขนาด columns header ลง) */
 #add_news {
   background-color: #28a475;
 }
-#add_news:hover{
- background-color: #1e6f56;
- transition: background-color 0.3s ease;
+
+#add_news:hover {
+  background-color: #1e6f56;
+  transition: background-color 0.3s ease;
 }
+
 .th,
 .td {
   padding: 10px 10px;
-  /* was 12px */
   font-size: 12px;
-  /* was 13px */
 }
 
 .thLabel {
@@ -1184,6 +1246,12 @@ onBeforeUnmount(() => {
   max-width: 760px;
 }
 
+/* Tags column width */
+.colTags {
+  width: 260px;
+  max-width: 320px;
+}
+
 /* ✅ show full header_news with wrapping (no cut) */
 .tMain {
   white-space: normal;
@@ -1191,6 +1259,70 @@ onBeforeUnmount(() => {
   text-overflow: initial;
   word-break: break-word;
   line-height: 1.5;
+}
+
+/* ✅ Title meta row */
+.titleMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.miniDate {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 950;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 12px;
+}
+
+.miniDate i {
+  color: rgba(56, 189, 248, 0.8);
+}
+
+.miniTags {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tagMore {
+  font-size: 12px;
+  font-weight: 950;
+  color: rgba(255, 255, 255, 0.62);
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+/* ✅ Tags cell (table) */
+.tagsCell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tagPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  background: rgba(56, 189, 248, 0.1);
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 950;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.mutedDash {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 950;
 }
 
 /* ✅ Actions column width */
@@ -1202,7 +1334,7 @@ onBeforeUnmount(() => {
   width: 320px;
 }
 
-/* ✅ Actions buttons (same vibe as MembersList) */
+/* ✅ Actions buttons */
 .actionRow {
   display: flex;
   gap: 8px;
@@ -1349,7 +1481,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* shimmer / glass sweep on table */
 @keyframes sheen {
   0% {
     transform: translateX(-70%);
@@ -1371,7 +1502,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
 
   .glow-a,
@@ -1817,6 +1947,7 @@ onBeforeUnmount(() => {
   will-change: transform;
 }
 
+/* meta */
 .metaRow {
   display: flex;
   flex-wrap: wrap;
@@ -1856,6 +1987,7 @@ onBeforeUnmount(() => {
   }
 }
 
+/* table */
 .tableWrap {
   border-radius: 18px;
   overflow: hidden;
@@ -1864,7 +1996,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(12px);
   position: relative;
-  /* ✅ for sheen */
 }
 
 .tableWrap::before {
@@ -1916,8 +2047,23 @@ onBeforeUnmount(() => {
 
 .titleCell {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.titleText {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ให้ข้อความห่อบรรทัดได้สวย */
+.tMain {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: initial;
+  word-break: break-word;
+  line-height: 1.5;
 }
 
 .thumbMini {
@@ -1928,9 +2074,15 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(0, 0, 0, 0.18);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  flex: 0 0 auto;
+}
+@media (max-width: 520px) {
+  .titleCell {
+    flex-direction: column;
+  }
 }
 
-/* Overlay + image viewer styles */
+/* Overlay + image viewer styles (unchanged from your file) */
 .overlay {
   position: fixed;
   inset: 0;
@@ -2106,7 +2258,6 @@ onBeforeUnmount(() => {
   margin-bottom: 10px;
 }
 
-/* ✅ UPDATED: Tags as dot "feature buttons" */
 .tagChips {
   display: flex;
   flex-wrap: wrap;
@@ -2119,15 +2270,12 @@ onBeforeUnmount(() => {
   gap: 12px;
   padding: 10px 12px;
   border-radius: 999px;
-
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.03);
   color: rgba(255, 255, 255, 0.92);
-
   font-size: 12px;
   font-weight: 950;
   cursor: pointer;
-
   position: relative;
   overflow: hidden;
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
@@ -2170,6 +2318,7 @@ onBeforeUnmount(() => {
   line-height: 1.2;
 }
 
+/* image viewer */
 .imgOverlay {
   position: fixed;
   inset: 0;
@@ -2216,7 +2365,7 @@ onBeforeUnmount(() => {
   display: block;
 }
 
-/* ✅ Confirm Delete Modal (COOL) */
+/* confirm + toast (unchanged from your file) */
 .confirmOverlay {
   position: fixed;
   inset: 0;
@@ -2243,11 +2392,7 @@ onBeforeUnmount(() => {
   content: "";
   position: absolute;
   inset: -2px;
-  background: linear-gradient(90deg,
-      rgba(239, 68, 68, 0.35),
-      rgba(99, 102, 241, 0.22),
-      rgba(56, 189, 248, 0.18),
-      rgba(239, 68, 68, 0.35));
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.35), rgba(99, 102, 241, 0.22), rgba(56, 189, 248, 0.18), rgba(239, 68, 68, 0.35));
   opacity: 0.18;
   filter: blur(16px);
   pointer-events: none;
@@ -2385,7 +2530,6 @@ onBeforeUnmount(() => {
   border-color: rgba(239, 68, 68, 0.5);
 }
 
-/* ✅ NEW: primary button for Edit confirm */
 .cBtn.primary {
   border-color: rgba(56, 189, 248, 0.28);
   background: rgba(56, 189, 248, 0.12);
@@ -2404,13 +2548,8 @@ onBeforeUnmount(() => {
   animation: spin 0.75s linear infinite;
 }
 
-/* ✅ Edit confirm theme (blue) */
 .confirmCard.edit::before {
-  background: linear-gradient(90deg,
-      rgba(56, 189, 248, 0.3),
-      rgba(99, 102, 241, 0.18),
-      rgba(14, 165, 233, 0.16),
-      rgba(56, 189, 248, 0.3));
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.3), rgba(99, 102, 241, 0.18), rgba(14, 165, 233, 0.16), rgba(56, 189, 248, 0.3));
   opacity: 0.18;
 }
 
@@ -2428,7 +2567,6 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(56, 189, 248, 0.22);
 }
 
-/* ✅ Toast */
 .toast {
   position: fixed;
   right: 18px;
@@ -2529,6 +2667,11 @@ onBeforeUnmount(() => {
   }
 
   .colWide {
+    width: auto;
+    max-width: none;
+  }
+
+  .colTags {
     width: auto;
     max-width: none;
   }

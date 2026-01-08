@@ -1,4 +1,4 @@
-<!-- AnnouncementView.vue (UPDATED: remove time column, add Link column from linkpath, clickable in table + overlay) -->
+<!-- AnnouncementView.vue (UPDATED: Link column as button w/ icon) -->
 <template>
   <div class="app tech">
     <!-- Ambient glow -->
@@ -20,15 +20,8 @@
       </router-link>
 
       <nav class="nav js-reveal">
-        <RouterLink
-          v-for="item in navItems"
-          :key="item.key"
-          :to="item.to"
-          class="navItem"
-          active-class="active"
-          @mouseenter="navHover($event, true)"
-          @mouseleave="navHover($event, false)"
-        >
+        <RouterLink v-for="item in navItems" :key="item.key" :to="item.to" class="navItem" active-class="active"
+          @mouseenter="navHover($event, true)" @mouseleave="navHover($event, false)">
           <span class="navIcon"><i :class="item.fa"></i></span>
           <span class="navLabel">{{ item.label }}</span>
           <span class="navPill" />
@@ -37,13 +30,8 @@
 
       <div class="spacer" />
 
-      <button
-        class="logout js-reveal"
-        type="button"
-        @click="logout"
-        @mouseenter="btnHover($event, true)"
-        @mouseleave="btnHover($event, false)"
-      >
+      <button class="logout js-reveal" type="button" @click="logout" @mouseenter="btnHover($event, true)"
+        @mouseleave="btnHover($event, false)">
         <span class="navIcon"><i class="fa-solid fa-right-from-bracket"></i></span>
         Log Out
       </button>
@@ -64,15 +52,8 @@
         </div>
 
         <div class="topActions">
-          <button
-            class="iconBtn"
-            type="button"
-            aria-label="Refresh"
-            title="Refresh"
-            @click="fetchAnnouncements"
-            @mouseenter="iconHover($event, true)"
-            @mouseleave="iconHover($event, false)"
-          >
+          <button class="iconBtn" type="button" aria-label="Refresh" title="Refresh" @click="fetchAnnouncements"
+            @mouseenter="iconHover($event, true)" @mouseleave="iconHover($event, false)">
             <i class="fa-solid fa-rotate-right"></i>
           </button>
 
@@ -136,11 +117,11 @@
               <b>{{ rows.length }}</b>
             </div>
 
-              <router-link to="/announcement">
-            <div class="metaPill" id="add_news">
-              <i class="fa-solid fa-plus"></i>
-              <span>ເພີ່ມປະກາດ</span>
-            </div>
+            <router-link to="/announcement">
+              <div class="metaPill" id="add_news">
+                <i class="fa-solid fa-plus"></i>
+                <span>ເພີ່ມປະກາດ</span>
+              </div>
             </router-link>
           </div>
 
@@ -151,16 +132,8 @@
                 <tr>
                   <th class="th thImg">Image</th>
 
-                  <th
-                    v-for="col in tableCols"
-                    :key="col"
-                    class="th"
-                    role="button"
-                    tabindex="0"
-                    @click="toggleSort(col)"
-                    @keydown.enter.prevent="toggleSort(col)"
-                    @keydown.space.prevent="toggleSort(col)"
-                  >
+                  <th v-for="col in tableCols" :key="col" class="th" role="button" tabindex="0" @click="toggleSort(col)"
+                    @keydown.enter.prevent="toggleSort(col)" @keydown.space.prevent="toggleSort(col)">
                     <span class="thLabel">{{ col }}</span>
                     <span class="sortIcon" v-if="sortKey === col">
                       <i :class="sortDir === 'asc' ? 'fa-solid fa-caret-up' : 'fa-solid fa-caret-down'"></i>
@@ -172,34 +145,19 @@
               </thead>
 
               <tbody>
-                <tr
-                  v-for="(a, idx) in rows"
-                  :key="rowKey(a, idx)"
-                  class="tr js-reveal"
-                  @click="openOverlay(a)"
-                  @mouseenter="rowHover($event, true)"
-                  @mouseleave="rowHover($event, false)"
-                >
+                <tr v-for="(a, idx) in rows" :key="rowKey(a, idx)" class="tr js-reveal" @click="openOverlay(a)"
+                  @mouseenter="rowHover($event, true)" @mouseleave="rowHover($event, false)">
                   <!-- ✅ Image cell -->
                   <td class="td tdImg">
                     <div class="thumbWrap">
-                      <img
-                        v-if="rowImageUrl(a) && !isBadImg(a)"
-                        class="thumb"
-                        :src="rowImageUrl(a)"
-                        alt=""
-                        loading="lazy"
-                        @error="markBadImage(a)"
-                      />
+                      <img v-if="rowImageUrl(a) && !isBadImg(a)" class="thumb" :src="rowImageUrl(a)" alt=""
+                        loading="lazy" @error="markBadImage(a)" />
                       <div v-else class="thumbPh">
                         <i class="fa-regular fa-image"></i>
                       </div>
 
-                      <span
-                        class="thumbDot"
-                        :class="{ on: isActive(a) }"
-                        :title="isActive(a) ? 'Active' : 'Inactive'"
-                      ></span>
+                      <span class="thumbDot" :class="{ on: isActive(a) }"
+                        :title="isActive(a) ? 'Active' : 'Inactive'"></span>
                     </div>
                   </td>
 
@@ -209,19 +167,13 @@
                       {{ announcementNoValue(a, idx) }}
                     </template>
 
-                    <!-- ✅ NEW: Link column from linkpath -->
+                    <!-- ✅ Link column => button -->
                     <template v-else-if="col === 'Link'">
-                      <a
-                        v-if="linkHref(a)"
-                        class="cellLink"
-                        :href="linkHref(a)"
-                        target="_blank"
-                        rel="noreferrer"
-                        @click.stop
-                      >
-                        {{ linkDisplay(a) }}
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                      </a>
+                      <button v-if="linkHref(a)" class="linkBtn" type="button" title="Open link"
+                        @click.stop="openLink(a)">
+                        <i class="fa-solid fa-link"></i>
+                        Open
+                      </button>
                       <span v-else>-</span>
                     </template>
 
@@ -233,55 +185,29 @@
                   <!-- Actions -->
                   <td class="td tdLast">
                     <div class="actionRow">
-                      <button
-                        class="pillBtn"
-                        type="button"
-                        title="View"
-                        @click.stop="openOverlay(a)"
-                        :disabled="isBusy(a)"
-                        @mouseenter="pillHover($event, true)"
-                        @mouseleave="pillHover($event, false)"
-                      >
+                      <button class="pillBtn" type="button" title="View" @click.stop="openOverlay(a)"
+                        :disabled="isBusy(a)" @mouseenter="pillHover($event, true)"
+                        @mouseleave="pillHover($event, false)">
                         <i class="fa-regular fa-eye"></i>
                         View
                       </button>
 
-                      <button
-                        class="pillBtn toggleBtn"
-                        type="button"
-                        :class="{ on: isActive(a) }"
-                        :disabled="isBusy(a)"
-                        :title="isActive(a) ? 'Set Inactive' : 'Set Active'"
-                        @click.stop="toggleActive(a)"
-                        @mouseenter="pillHover($event, true)"
-                        @mouseleave="pillHover($event, false)"
-                      >
+                      <button class="pillBtn toggleBtn" type="button" :class="{ on: isActive(a) }" :disabled="isBusy(a)"
+                        :title="isActive(a) ? 'Set Inactive' : 'Set Active'" @click.stop="toggleActive(a)"
+                        @mouseenter="pillHover($event, true)" @mouseleave="pillHover($event, false)">
                         <i :class="isActive(a) ? 'fa-solid fa-toggle-on' : 'fa-solid fa-toggle-off'"></i>
                         {{ isActive(a) ? "Active" : "Inactive" }}
                       </button>
 
-                      <button
-                        class="pillBtn"
-                        type="button"
-                        title="Edit"
-                        :disabled="isBusy(a)"
-                        @click.stop="askEdit(a)"
-                        @mouseenter="pillHover($event, true)"
-                        @mouseleave="pillHover($event, false)"
-                      >
+                      <button class="pillBtn" type="button" title="Edit" :disabled="isBusy(a)" @click.stop="askEdit(a)"
+                        @mouseenter="pillHover($event, true)" @mouseleave="pillHover($event, false)">
                         <i class="fa-regular fa-pen-to-square"></i>
                         Edit
                       </button>
 
-                      <button
-                        class="pillBtn danger"
-                        type="button"
-                        title="Delete"
-                        :disabled="isBusy(a)"
-                        @click.stop="askDelete(a)"
-                        @mouseenter="pillHover($event, true)"
-                        @mouseleave="pillHover($event, false)"
-                      >
+                      <button class="pillBtn danger" type="button" title="Delete" :disabled="isBusy(a)"
+                        @click.stop="askDelete(a)" @mouseenter="pillHover($event, true)"
+                        @mouseleave="pillHover($event, false)">
                         <i class="fa-regular fa-trash-can"></i>
                         Delete
                       </button>
@@ -312,14 +238,8 @@
                       {{ isActive(selected) ? "Active" : "Inactive" }}
                     </span>
 
-                    <button
-                      class="iconBtn"
-                      type="button"
-                      aria-label="Close"
-                      @click="closeOverlay"
-                      @mouseenter="iconHover($event, true)"
-                      @mouseleave="iconHover($event, false)"
-                    >
+                    <button class="iconBtn" type="button" aria-label="Close" @click="closeOverlay"
+                      @mouseenter="iconHover($event, true)" @mouseleave="iconHover($event, false)">
                       <i class="fa-solid fa-xmark"></i>
                     </button>
                   </div>
@@ -358,21 +278,23 @@
                         </div>
                       </div>
 
-                      <!-- ✅ NEW: link type in overlay -->
+                      <!-- ✅ link type in overlay => button -->
                       <div v-else-if="item.type === 'link'" class="v">
-                        <a
-                          v-if="item.href"
-                          class="cellLink"
-                          :href="item.href"
-                          target="_blank"
-                          rel="noreferrer"
-                          @click.stop
-                        >
-                          {{ item.text }}
-                          <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        </a>
+                        <div v-if="item.href" class="linkRow">
+                          <button class="linkBtn" type="button" title="Open link" @click.stop="openLinkHref(item.href)">
+                            <i class="fa-solid fa-link"></i>
+                            Open Link
+                          </button>
+
+                          <!-- ✅ show full link -->
+                          <div class="linkFull mono" :title="item.href">
+                            {{ item.href }}
+                          </div>
+                        </div>
+
                         <span v-else>-</span>
                       </div>
+
 
                       <div v-else class="v">
                         {{ item.v }}
@@ -389,20 +311,14 @@
           <!-- Confirm + Toast -->
           <Teleport to="body">
             <div v-if="confirmOpen" class="confirmOverlay" @click.self="closeConfirm">
-              <div
-                ref="confirmEl"
-                class="confirmCard"
-                :class="{ danger: confirmAction === 'delete', info: confirmAction === 'edit' }"
-              >
+              <div ref="confirmEl" class="confirmCard"
+                :class="{ danger: confirmAction === 'delete', info: confirmAction === 'edit' }">
                 <div class="confirmIcon">
                   <div class="skull">
-                    <i
-                      :class="
-                        confirmAction === 'delete'
-                          ? 'fa-solid fa-triangle-exclamation'
-                          : 'fa-regular fa-pen-to-square'
-                      "
-                    ></i>
+                    <i :class="confirmAction === 'delete'
+                        ? 'fa-solid fa-triangle-exclamation'
+                        : 'fa-regular fa-pen-to-square'
+                      "></i>
                   </div>
                   <span class="ring ringA"></span>
                   <span class="ring ringB"></span>
@@ -430,13 +346,8 @@
                     Cancel
                   </button>
 
-                  <button
-                    class="cBtn"
-                    :class="confirmAction === 'delete' ? 'danger' : 'info'"
-                    type="button"
-                    @click="confirmProceed"
-                    :disabled="confirmLoading"
-                  >
+                  <button class="cBtn" :class="confirmAction === 'delete' ? 'danger' : 'info'" type="button"
+                    @click="confirmProceed" :disabled="confirmLoading">
                     <span v-if="confirmLoading" class="miniSpin"></span>
                     <span>
                       <template v-if="confirmAction === 'delete'">
@@ -484,8 +395,6 @@ const navItems = [
   { key: "news", label: "ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ", to: "/newinsert", fa: "fa-solid fa-newspaper" },
   { key: "protocols", label: "ປະກາດຮັບສະມັກພະນັກງານ", to: "/joblist", fa: "fa-solid fa-user-plus" },
   { key: "announcement", label: "ປະກາດ", to: "/announcement", fa: "fa-solid fa-bullhorn" },
-  // { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", fa: "fa-solid fa-people-group" },
-  // { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", fa: "fa-solid fa-users-rectangle" },
 ];
 
 /* =========================
@@ -697,10 +606,18 @@ function linkHref(row) {
   return normalizeLink(linkRaw(row));
 }
 
-function linkDisplay(row) {
-  const raw = String(linkRaw(row) ?? "").trim();
-  if (!raw) return "Open";
-  return raw.length > 34 ? raw.slice(0, 34) + "…" : raw;
+// ✅ open link from a row (used by Link button)
+function openLink(row) {
+  const href = linkHref(row);
+  if (!href) return;
+  window.open(href, "_blank", "noopener,noreferrer");
+}
+
+// ✅ open link from overlay item.href
+function openLinkHref(href) {
+  const s = normalizeLink(href);
+  if (!s) return;
+  window.open(s, "_blank", "noopener,noreferrer");
 }
 
 function safeValue(v) {
@@ -1038,7 +955,7 @@ const rows = computed(() => {
 /* =========================
    Flatten ALL fields for overlay
    - hide image keys + hide announcement id keys
-   - convert linkpath -> Link (clickable)
+   - convert linkpath -> Link (clickable button)
    - hide time
    ========================= */
 function toText(v) {
@@ -1117,7 +1034,7 @@ function flattenAny(val, path, out) {
       if (lk === "time") continue; // ✅ hide time in overlay
       if (isAnnouncementIdKey(k)) continue;
 
-      // ✅ convert linkpath -> Link (clickable)
+      // ✅ convert linkpath -> Link (button)
       if (isLinkPathKey(k)) {
         const raw = String(v ?? "").trim();
         out.push({
@@ -1223,12 +1140,12 @@ async function fetchAnnouncements() {
     const list = Array.isArray(data)
       ? data
       : Array.isArray(data?.announcement)
-      ? data.announcement
-      : Array.isArray(data?.items)
-      ? data.items
-      : Array.isArray(data?.data)
-      ? data.data
-      : [];
+        ? data.announcement
+        : Array.isArray(data?.items)
+          ? data.items
+          : Array.isArray(data?.data)
+            ? data.data
+            : [];
 
     announcements.value = list;
 
@@ -1302,17 +1219,34 @@ onBeforeUnmount(() => {
 
 <style scoped>
 /* ===== same theme as your JobList.vue ===== */
-
-  #add_news {
+#add_news {
   background-color: #28a475;
 }
-#add_news:hover{
- background-color: #1e6f56;
- transition: background-color 0.3s ease;
+
+#add_news:hover {
+  background-color: #1e6f56;
+  transition: background-color 0.3s ease;
 }
+.linkRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.linkFull {
+  font-size: 12px;
+  font-weight: 850;
+  color: rgba(255, 255, 255, 0.75);
+  word-break: break-all; /* ✅ ให้ลิงก์ยาวๆ ขึ้นบรรทัดใหม่ได้ */
+  line-height: 1.4;
+}
+
+
 :root {
   color-scheme: dark;
 }
+
 * {
   box-sizing: border-box;
 }
@@ -1361,6 +1295,7 @@ onBeforeUnmount(() => {
   filter: blur(52px);
   opacity: 0.75;
 }
+
 .glow-a {
   width: 560px;
   height: 560px;
@@ -1368,6 +1303,7 @@ onBeforeUnmount(() => {
   top: 120px;
   background: radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.4), transparent 62%);
 }
+
 .glow-b {
   width: 560px;
   height: 560px;
@@ -1389,36 +1325,39 @@ onBeforeUnmount(() => {
   position: relative;
   overflow: hidden;
 }
+
 .sidebar::before {
   content: "";
   position: absolute;
   inset: -2px;
-  background: linear-gradient(
-    90deg,
-    rgba(56, 189, 248, 0.45),
-    rgba(99, 102, 241, 0.25),
-    rgba(14, 165, 233, 0.22),
-    rgba(56, 189, 248, 0.45)
-  );
+  background: linear-gradient(90deg,
+      rgba(56, 189, 248, 0.45),
+      rgba(99, 102, 241, 0.25),
+      rgba(14, 165, 233, 0.22),
+      rgba(56, 189, 248, 0.45));
   opacity: 0.14;
   filter: blur(14px);
   pointer-events: none;
   animation: holoShift 7s linear infinite;
 }
+
 @keyframes holoShift {
   0% {
     transform: translateX(-16%);
   }
+
   100% {
     transform: translateX(16%);
   }
 }
+
 .brand {
   display: flex;
   gap: 12px;
   align-items: center;
   position: relative;
 }
+
 .brandMark {
   width: 50px;
   height: 50px;
@@ -1429,21 +1368,25 @@ onBeforeUnmount(() => {
   box-shadow: 0 18px 42px rgba(56, 189, 248, 0.12);
   border: 1px solid rgb(255, 255, 255);
 }
+
 .brandName {
   font-weight: 900;
   letter-spacing: 0.2px;
 }
+
 .brandSub {
   font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
 }
+
 .nav {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-top: 6px;
 }
+
 .navItem {
   text-decoration: none;
   position: relative;
@@ -1458,18 +1401,21 @@ onBeforeUnmount(() => {
   gap: 10px;
   transition: background 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
+
 .navItem:hover {
   background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.92);
   border-color: rgba(56, 189, 248, 0.22);
   box-shadow: 0 12px 30px rgba(56, 189, 248, 0.1);
 }
+
 .navItem.active {
   background: linear-gradient(90deg, rgba(56, 189, 248, 0.22), rgba(99, 102, 241, 0.14));
   border-color: rgba(56, 189, 248, 0.24);
   color: rgba(255, 255, 255, 0.95);
   box-shadow: 0 18px 40px rgba(56, 189, 248, 0.12);
 }
+
 .navIcon {
   width: 22px;
   height: 22px;
@@ -1477,9 +1423,11 @@ onBeforeUnmount(() => {
   place-items: center;
   color: rgba(255, 255, 255, 0.9);
 }
+
 .navLabel {
   font-weight: 800;
 }
+
 .navPill {
   position: absolute;
   right: 10px;
@@ -1490,13 +1438,16 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: rgba(56, 189, 248, 0);
 }
+
 .navItem.active .navPill {
   background: rgba(56, 189, 248, 0.95);
   box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.14);
 }
+
 .spacer {
   flex: 1;
 }
+
 .logout {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
@@ -1517,6 +1468,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 10px;
 }
+
 .topbar {
   display: grid;
   grid-template-columns: 1fr 380px 280px;
@@ -1524,15 +1476,18 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 10px 6px 10px;
 }
+
 .hello {
   font-size: 13px;
   color: var(--muted);
 }
+
 .name {
   font-size: 22px;
   font-weight: 950;
   letter-spacing: 0.2px;
 }
+
 .searchWrap {
   display: flex;
   align-items: center;
@@ -1542,13 +1497,16 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   padding: 10px 12px;
 }
+
 .searchWrap:focus-within {
   border-color: rgba(56, 189, 248, 0.25);
   box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.08);
 }
+
 .searchIcon {
   color: rgba(255, 255, 255, 0.58);
 }
+
 .search {
   width: 100%;
   border: 0;
@@ -1557,12 +1515,14 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
 }
+
 .topActions {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
 }
+
 .iconBtn {
   position: relative;
   width: 40px;
@@ -1575,12 +1535,14 @@ onBeforeUnmount(() => {
   cursor: pointer;
   color: rgba(255, 255, 255, 0.86);
 }
+
 .profile {
   display: flex;
   align-items: center;
   gap: 10px;
   padding-left: 6px;
 }
+
 .avatar {
   width: 40px;
   height: 40px;
@@ -1591,26 +1553,32 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(56, 189, 248, 0.14));
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
 .profileText {
   display: block;
 }
+
 .profileName {
   font-weight: 850;
   font-size: 13px;
 }
+
 .profileRole {
   font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
 }
+
 .mainBody {
   flex: 1;
   overflow: auto;
   padding-right: 6px;
 }
+
 .mainBody::-webkit-scrollbar {
   width: 10px;
 }
+
 .mainBody::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 999px;
@@ -1621,6 +1589,7 @@ onBeforeUnmount(() => {
   padding: 6px 6px 18px;
   color: var(--txt);
 }
+
 .pageTop {
   display: flex;
   align-items: flex-end;
@@ -1628,26 +1597,31 @@ onBeforeUnmount(() => {
   gap: 14px;
   margin-bottom: 12px;
 }
+
 .pageTitle {
   font-size: 20px;
   font-weight: 950;
   letter-spacing: 0.2px;
 }
+
 .pageSub {
   margin-top: 4px;
   font-size: 12px;
   color: var(--muted);
 }
+
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   color: rgba(255, 255, 255, 0.78);
 }
+
 .actions {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 520px;
 }
+
 .filterWrap {
   width: 360px;
   display: flex;
@@ -1658,13 +1632,16 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   padding: 10px 12px;
 }
+
 .filterWrap:focus-within {
   border-color: rgba(56, 189, 248, 0.22);
   box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.07);
 }
+
 .filterIcon {
   color: rgba(255, 255, 255, 0.55);
 }
+
 .filterSelect {
   width: 160px;
   border: 0;
@@ -1673,6 +1650,7 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.84);
   font-weight: 850;
 }
+
 .filterInput {
   flex: 1;
   border: 0;
@@ -1681,6 +1659,7 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
 }
+
 .ghostBtn {
   height: 40px;
   padding: 0 12px;
@@ -1691,12 +1670,14 @@ onBeforeUnmount(() => {
   font-weight: 900;
   cursor: pointer;
 }
+
 .metaRow {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 12px;
 }
+
 .metaPill {
   display: inline-flex;
   align-items: center;
@@ -1708,10 +1689,12 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.78);
   font-weight: 850;
 }
+
 .errorPill {
   border-color: rgba(239, 68, 68, 0.25);
   color: rgba(239, 68, 68, 0.95);
 }
+
 .spinner {
   width: 14px;
   height: 14px;
@@ -1720,6 +1703,7 @@ onBeforeUnmount(() => {
   border-top-color: rgba(56, 189, 248, 0.7);
   animation: spin 0.85s linear infinite;
 }
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -1734,10 +1718,12 @@ onBeforeUnmount(() => {
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(12px);
 }
+
 .table {
   width: 100%;
   border-collapse: collapse;
 }
+
 .th,
 .td {
   padding: 12px 12px;
@@ -1745,6 +1731,7 @@ onBeforeUnmount(() => {
   text-align: left;
   font-size: 13px;
 }
+
 .th {
   color: rgba(255, 255, 255, 0.8);
   font-weight: 950;
@@ -1752,23 +1739,29 @@ onBeforeUnmount(() => {
   user-select: none;
   cursor: pointer;
 }
+
 .thLast {
   cursor: default;
 }
+
 .tr {
   cursor: pointer;
   transition: background 160ms ease;
 }
+
 .tr:hover {
   background: rgba(255, 255, 255, 0.03);
 }
+
 .td {
   color: rgba(255, 255, 255, 0.86);
   font-weight: 800;
 }
+
 .tdLast {
   width: 420px;
 }
+
 .empty {
   padding: 18px;
   text-align: center;
@@ -1776,17 +1769,28 @@ onBeforeUnmount(() => {
   font-weight: 900;
 }
 
-/* ✅ Link style (table + overlay) */
-.cellLink {
-  color: rgba(56, 189, 248, 0.95);
-  text-decoration: none;
+/* ✅ NEW: Link button (table + overlay) */
+.linkBtn {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  background: rgba(56, 189, 248, 0.12);
+  color: rgba(255, 255, 255, 0.92);
   font-weight: 950;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
 }
-.cellLink:hover {
-  text-decoration: underline;
+
+.linkBtn:hover {
+  border-color: rgba(56, 189, 248, 0.48);
+  background: rgba(56, 189, 248, 0.16);
+}
+
+.linkBtn:active {
+  transform: translateY(1px);
 }
 
 /* ✅ Image column */
@@ -1794,9 +1798,11 @@ onBeforeUnmount(() => {
   cursor: default;
   width: 92px;
 }
+
 .tdImg {
   width: 92px;
 }
+
 .thumbWrap {
   position: relative;
   width: 64px;
@@ -1807,12 +1813,14 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.03);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
 }
+
 .thumb {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
+
 .thumbPh {
   width: 100%;
   height: 100%;
@@ -1820,6 +1828,7 @@ onBeforeUnmount(() => {
   place-items: center;
   color: rgba(255, 255, 255, 0.5);
 }
+
 .thumbDot {
   position: absolute;
   right: 6px;
@@ -1830,6 +1839,7 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.28);
   box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.22);
 }
+
 .thumbDot.on {
   background: rgba(34, 197, 94, 0.95);
   box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.14);
@@ -1842,6 +1852,7 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   justify-content: flex-start;
 }
+
 .pillBtn {
   display: inline-flex;
   align-items: center;
@@ -1855,25 +1866,31 @@ onBeforeUnmount(() => {
   cursor: pointer;
   line-height: 1;
 }
+
 .pillBtn:hover {
   border-color: rgba(56, 189, 248, 0.18);
   color: rgba(255, 255, 255, 0.92);
 }
+
 .pillBtn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
 .pillBtn.on {
   background: linear-gradient(90deg, rgba(56, 189, 248, 0.18), rgba(99, 102, 241, 0.1));
   border-color: rgba(56, 189, 248, 0.22);
   color: rgba(255, 255, 255, 0.95);
 }
+
 .pillBtn.danger {
   border-color: rgba(239, 68, 68, 0.26);
 }
+
 .pillBtn.danger:hover {
   border-color: rgba(239, 68, 68, 0.45);
 }
+
 .toggleBtn i {
   font-size: 16px;
 }
@@ -1890,6 +1907,7 @@ onBeforeUnmount(() => {
   padding: 20px;
   z-index: 9999;
 }
+
 .modal {
   width: min(980px, 96vw);
   max-height: 88vh;
@@ -1900,6 +1918,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--stroke);
   box-shadow: 0 26px 80px rgba(0, 0, 0, 0.55);
 }
+
 .modalGlow {
   position: absolute;
   inset: -2px;
@@ -1909,6 +1928,7 @@ onBeforeUnmount(() => {
   opacity: 0.9;
   filter: blur(16px);
 }
+
 .modalTop {
   display: flex;
   align-items: center;
@@ -1919,6 +1939,7 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 1;
 }
+
 .modalTitle {
   display: flex;
   align-items: center;
@@ -1927,11 +1948,13 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.92);
   font-size: 22px;
 }
+
 .modalTopRight {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .statusBadge {
   display: inline-flex;
   align-items: center;
@@ -1944,13 +1967,16 @@ onBeforeUnmount(() => {
   font-weight: 950;
   font-size: 12px;
 }
+
 .statusBadge.on {
   border-color: rgba(34, 197, 94, 0.22);
   background: rgba(34, 197, 94, 0.08);
 }
+
 .statusBadge.on i {
   color: rgba(34, 197, 94, 0.95);
 }
+
 .modalBody {
   padding: 16px;
   overflow: auto;
@@ -1968,6 +1994,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
   margin-bottom: 12px;
 }
+
 .imagePanelTop {
   display: flex;
   align-items: center;
@@ -1976,6 +2003,7 @@ onBeforeUnmount(() => {
   padding: 12px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
+
 .imagePanelTitle {
   display: inline-flex;
   align-items: center;
@@ -1983,6 +2011,7 @@ onBeforeUnmount(() => {
   font-weight: 950;
   color: rgba(255, 255, 255, 0.9);
 }
+
 .imageLink {
   text-decoration: none;
   color: rgba(56, 189, 248, 0.95);
@@ -1992,12 +2021,15 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
 }
+
 .imageLink:hover {
   text-decoration: underline;
 }
+
 .imagePanelBody {
   padding: 12px;
 }
+
 .previewImg {
   width: 100%;
   max-height: 360px;
@@ -2012,6 +2044,7 @@ onBeforeUnmount(() => {
   grid-template-columns: 1fr;
   gap: 12px;
 }
+
 .kv {
   display: grid;
   grid-template-columns: 1.2fr 2fr;
@@ -2021,6 +2054,7 @@ onBeforeUnmount(() => {
   background: var(--panel2);
   border: 1px solid var(--stroke);
 }
+
 .k {
   color: rgba(255, 255, 255, 0.62);
   font-weight: 950;
@@ -2029,6 +2063,7 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .v {
   color: rgba(255, 255, 255, 0.88);
   font-weight: 850;
@@ -2047,6 +2082,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.18));
   box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.06);
 }
+
 .neoItem {
   display: flex;
   align-items: flex-start;
@@ -2058,6 +2094,7 @@ onBeforeUnmount(() => {
   position: relative;
   overflow: hidden;
 }
+
 .neoItem::before {
   content: "";
   position: absolute;
@@ -2067,6 +2104,7 @@ onBeforeUnmount(() => {
   filter: blur(14px);
   pointer-events: none;
 }
+
 .neoDot {
   width: 10px;
   height: 10px;
@@ -2076,6 +2114,7 @@ onBeforeUnmount(() => {
   background: rgba(56, 189, 248, 0.95);
   box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.14);
 }
+
 .neoText {
   position: relative;
   z-index: 1;
@@ -2083,6 +2122,7 @@ onBeforeUnmount(() => {
   font-weight: 850;
   color: rgba(255, 255, 255, 0.9);
 }
+
 .neoEmpty {
   color: rgba(255, 255, 255, 0.6);
   font-weight: 900;
@@ -2100,6 +2140,7 @@ onBeforeUnmount(() => {
   place-items: center;
   padding: 20px;
 }
+
 .confirmCard {
   width: min(520px, 95vw);
   border-radius: 22px;
@@ -2110,6 +2151,7 @@ onBeforeUnmount(() => {
   position: relative;
   overflow: hidden;
 }
+
 .confirmCard::before {
   content: "";
   position: absolute;
@@ -2117,22 +2159,19 @@ onBeforeUnmount(() => {
   opacity: 0.18;
   filter: blur(16px);
   pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgba(56, 189, 248, 0.35),
-    rgba(99, 102, 241, 0.22),
-    rgba(56, 189, 248, 0.18),
-    rgba(56, 189, 248, 0.35)
-  );
+  background: linear-gradient(90deg,
+      rgba(56, 189, 248, 0.35),
+      rgba(99, 102, 241, 0.22),
+      rgba(56, 189, 248, 0.18),
+      rgba(56, 189, 248, 0.35));
 }
+
 .confirmCard.danger::before {
-  background: linear-gradient(
-    90deg,
-    rgba(239, 68, 68, 0.35),
-    rgba(99, 102, 241, 0.22),
-    rgba(56, 189, 248, 0.18),
-    rgba(239, 68, 68, 0.35)
-  );
+  background: linear-gradient(90deg,
+      rgba(239, 68, 68, 0.35),
+      rgba(99, 102, 241, 0.22),
+      rgba(56, 189, 248, 0.18),
+      rgba(239, 68, 68, 0.35));
 }
 
 .confirmIcon {
@@ -2144,6 +2183,7 @@ onBeforeUnmount(() => {
   place-items: center;
   position: relative;
 }
+
 .skull {
   width: 62px;
   height: 62px;
@@ -2156,15 +2196,18 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(56, 189, 248, 0.22);
   box-shadow: 0 18px 44px rgba(56, 189, 248, 0.14);
 }
+
 .confirmCard.danger .skull {
   background: rgba(239, 68, 68, 0.16);
   border: 1px solid rgba(239, 68, 68, 0.22);
   box-shadow: 0 18px 44px rgba(239, 68, 68, 0.14);
 }
+
 .skull i {
   font-size: 22px;
   color: rgba(56, 189, 248, 0.95);
 }
+
 .confirmCard.danger .skull i {
   color: rgba(239, 68, 68, 0.95);
 }
@@ -2177,28 +2220,34 @@ onBeforeUnmount(() => {
   animation: pulse 1.9s ease-in-out infinite;
   border: 1px solid rgba(56, 189, 248, 0.2);
 }
+
 .confirmCard.danger .ring {
   border-color: rgba(239, 68, 68, 0.2);
 }
+
 .ringB {
   inset: -10px;
   opacity: 0.55;
   animation-delay: 0.35s;
 }
+
 @keyframes pulse {
   0% {
     transform: scale(0.96);
     opacity: 0.55;
   }
+
   60% {
     transform: scale(1.05);
     opacity: 0.18;
   }
+
   100% {
     transform: scale(0.96);
     opacity: 0.55;
   }
 }
+
 .confirmTitle {
   text-align: center;
   font-weight: 950;
@@ -2207,6 +2256,7 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
 }
+
 .confirmText {
   margin-top: 8px;
   text-align: center;
@@ -2216,16 +2266,19 @@ onBeforeUnmount(() => {
   z-index: 2;
   line-height: 1.5;
 }
+
 .confirmName {
   display: inline-block;
   margin-left: 6px;
   color: rgba(255, 255, 255, 0.92);
 }
+
 .confirmHint {
   margin-top: 8px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.58);
 }
+
 .confirmActions {
   margin-top: 14px;
   display: flex;
@@ -2234,6 +2287,7 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
 }
+
 .cBtn {
   height: 42px;
   padding: 0 14px;
@@ -2247,27 +2301,34 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
 }
+
 .cBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
 .cBtn.ghost:hover {
   border-color: rgba(56, 189, 248, 0.18);
 }
+
 .cBtn.info {
   border-color: rgba(56, 189, 248, 0.22);
   background: rgba(56, 189, 248, 0.12);
 }
+
 .cBtn.info:hover {
   border-color: rgba(56, 189, 248, 0.45);
 }
+
 .cBtn.danger {
   border-color: rgba(239, 68, 68, 0.28);
   background: rgba(239, 68, 68, 0.12);
 }
+
 .cBtn.danger:hover {
   border-color: rgba(239, 68, 68, 0.5);
 }
+
 .miniSpin {
   width: 14px;
   height: 14px;
@@ -2276,6 +2337,7 @@ onBeforeUnmount(() => {
   border-top-color: rgba(56, 189, 248, 0.95);
   animation: spin 0.75s linear infinite;
 }
+
 .confirmCard.danger .miniSpin {
   border-top-color: rgba(239, 68, 68, 0.95);
 }
@@ -2298,34 +2360,43 @@ onBeforeUnmount(() => {
   font-weight: 950;
   animation: toastIn 0.24s ease-out;
 }
+
 @keyframes toastIn {
   from {
     transform: translateY(8px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
   }
 }
+
 .toast.success {
   border-color: rgba(34, 197, 94, 0.22);
 }
+
 .toast.success i {
   color: rgba(34, 197, 94, 0.95);
 }
+
 .toast.error {
   border-color: rgba(239, 68, 68, 0.25);
 }
+
 .toast.error i {
   color: rgba(239, 68, 68, 0.95);
 }
+
 .toast.info {
   border-color: rgba(56, 189, 248, 0.22);
 }
+
 .toast.info i {
   color: rgba(56, 189, 248, 0.95);
 }
+
 .toastText {
   color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
@@ -2336,44 +2407,55 @@ onBeforeUnmount(() => {
   .app.tech {
     grid-template-columns: 86px 1fr;
   }
+
   .brandText,
   .navLabel,
   .profileText {
     display: none;
   }
+
   .topbar {
     grid-template-columns: 1fr 1fr 160px;
   }
+
   .tdLast {
     width: 360px;
   }
 }
+
 @media (max-width: 920px) {
   .topbar {
     grid-template-columns: 1fr 1fr;
   }
+
   .topActions {
     justify-content: flex-start;
   }
+
   .actions {
     min-width: 0;
     width: 100%;
     flex-wrap: wrap;
     justify-content: flex-end;
   }
+
   .filterWrap {
     width: 100%;
   }
+
   .kv {
     grid-template-columns: 1fr;
   }
+
   .tdLast {
     width: 100%;
   }
+
   .thImg,
   .tdImg {
     width: 78px;
   }
+
   .thumbWrap {
     width: 56px;
     height: 40px;

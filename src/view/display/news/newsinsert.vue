@@ -1,54 +1,12 @@
-<!-- NewsInsert.vue (FINAL: Insert to MySQL table + Fetch API + Flatpickr + GSAP + Sharp WebP + ✅ Tech Confirm Popup + ✅ Result Popup) -->
+<!-- NewsInsert.vue (NO SIDEBAR) -->
 <template>
   <div class="page tech">
     <div class="glow glow-a"></div>
     <div class="glow glow-b"></div>
 
     <main class="layout">
-      <!-- Sidebar -->
-      <aside ref="sideEl" class="sidebar js-side">
-        <router-link to="/" style="text-decoration: none;">
-      <div class="brand js-reveal">
-        <div class="brandMark">
-          <img src="/logolapnet/fullcircle.png" alt="" style="width: 100%; height: 100%" />
-        </div>
-        <div class="brandText">
-          <div class="brandName">LAPNet</div>
-          <div class="brandSub">Admin Console</div>
-        </div>
-      </div>
-      </router-link>
+      <!-- ✅ NO SIDEBAR -->
 
-        <nav class="nav">
-          <RouterLink
-            v-for="item in navItems"
-            :key="item.key"
-            :to="item.to"
-            class="navItem js-sideItem"
-            active-class="active"
-            @mouseenter="navHover($event, true)"
-            @mouseleave="navHover($event, false)"
-          >
-            <span class="navIcon"><i :class="item.icon"></i></span>
-            <span class="navLabel">{{ item.label }}</span>
-            <span class="navPill" />
-          </RouterLink>
-        </nav>
-
-        <div class="spacer"></div>
-
-        <button
-          class="logout js-sideItem"
-          type="button"
-          @mouseenter="btnHover($event, true)"
-          @mouseleave="btnHover($event, false)"
-        >
-          <span class="navIcon"><i class="fa-solid fa-right-from-bracket"></i></span>
-          Log Out
-        </button>
-      </aside>
-
-      <!-- Right content -->
       <section class="content">
         <header ref="headEl" class="head js-reveal">
           <div class="headLeft">
@@ -345,7 +303,7 @@
       </section>
     </main>
 
-    <!-- ✅ Confirm Popup (Confirm/Cancel ก่อน Save) -->
+    <!-- ✅ Confirm Popup -->
     <Teleport to="body">
       <div v-if="confirm.open" ref="confirmOverlayEl" class="popOverlay" @click.self="closeConfirm">
         <div ref="confirmModalEl" class="popModal">
@@ -395,7 +353,7 @@
       </div>
     </Teleport>
 
-    <!-- ✅ Result Popup (Success/Error หลัง Save) -->
+    <!-- ✅ Result Popup -->
     <Teleport to="body">
       <div v-if="popup.open" ref="popOverlayEl" class="popOverlay" @click.self="closePopup">
         <div ref="popModalEl" class="popModal">
@@ -417,20 +375,20 @@
 
           <div class="popActions">
             <router-link to="/news">
-            <button class="btn ghost" type="button"  @mouseenter="btnHover($event, true)" @mouseleave="btnHover($event, false)">
-              <i class="fa-solid fa-arrow-left"></i> ເບິ່ງຂ່າວທີ່ເພີ່ມ
-            </button>
+              <button class="btn ghost" type="button" @mouseenter="btnHover($event, true)" @mouseleave="btnHover($event, false)">
+                <i class="fa-solid fa-arrow-left"></i> ເບິ່ງຂ່າວທີ່ເພີ່ມ
+              </button>
             </router-link>
 
             <button
               v-if="popup.type === 'success'"
               class="btn primary"
               type="button"
-              @click="closePopup" 
+              @click="closePopup"
               @mouseenter="btnHover($event, true)"
               @mouseleave="btnHover($event, false)"
             >
-             ປິດ
+              ປິດ
             </button>
 
             <button
@@ -463,7 +421,6 @@ import "flatpickr/dist/flatpickr.css";
 
 const router = useRouter();
 
-const sideEl = ref(null);
 const headEl = ref(null);
 const cardEl = ref(null);
 const actionsEl = ref(null);
@@ -485,25 +442,15 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 const NEWS_INSERT_URL = API_BASE ? `${API_BASE}/api/news/insert` : "/api/news/insert";
 const OPTIMIZE_URL = API_BASE ? `${API_BASE}/api/optimize` : "/api/optimize";
 
-const navItems = [
-  { key: "dashboard", label: "ພາບລວມ", to: "/dashboard", icon: "fa-solid fa-chart-line" },
-  { key: "member", label: "ເພີ່ມທະນາຄານສະມາຊິກ", to: "/memberinsert", icon: "fa-solid fa-building-columns" },
-  { key: "news", label: "ເພີ່ມຂ່າວສານ ແລະ ກິດຈະກຳ", to: "/newinsert", icon: "fa-solid fa-newspaper" },
-  { key: "joblist", label: "ປະກາດຮັບສະມັກພະນັກງານ", to: "/joblist", icon: "fa-solid fa-user-plus" },
-  { key: "announcement", label: "ປະກາດ", to: "/announcement", icon: "fa-solid fa-bullhorn" },
-  // { key: "boarddirector", label: "ເພີ່ມສະພາບໍລິຫານ", to: "/board_director", icon: "fa-solid fa-people-group" },
-  // { key: "lapnet", label: "ເພີ່ມພະນັກງານ LAPNet", to: "/lapnet_employee", icon: "fa-solid fa-users-rectangle" },
-];
-
 const categories = ["Meeting", "Contract Signing", "Announcement", "Activity", "Launch Event", "Event"];
 
 // ---------- Timestamp ----------
 function nowTimestamp() {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(
-    d.getMinutes()
-  )}:${pad(d.getSeconds())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(
+    d.getSeconds()
+  )}`;
 }
 
 function buildDateTime(selectedYmd, timestamp) {
@@ -551,11 +498,7 @@ async function showConfirm() {
   await nextTick();
 
   gsap.fromTo(confirmOverlayEl.value, { opacity: 0 }, { opacity: 1, duration: 0.16, ease: "power2.out" });
-  gsap.fromTo(
-    confirmModalEl.value,
-    { opacity: 0, y: 12, scale: 0.985 },
-    { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "power2.out" }
-  );
+  gsap.fromTo(confirmModalEl.value, { opacity: 0, y: 12, scale: 0.985 }, { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "power2.out" });
 }
 
 function closeConfirm() {
@@ -596,10 +539,10 @@ async function confirmSave() {
   }
 }
 
-// ---------- ✅ Result Popup (Tech) ----------
+// ---------- ✅ Result Popup ----------
 const popup = reactive({
   open: false,
-  type: "success", // success | error
+  type: "success",
   title: "",
   message: "",
 });
@@ -616,11 +559,7 @@ async function showPopup(type, title, message) {
   await nextTick();
 
   gsap.fromTo(popOverlayEl.value, { opacity: 0 }, { opacity: 1, duration: 0.16, ease: "power2.out" });
-  gsap.fromTo(
-    popModalEl.value,
-    { opacity: 0, y: 12, scale: 0.985 },
-    { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "power2.out" }
-  );
+  gsap.fromTo(popModalEl.value, { opacity: 0, y: 12, scale: 0.985 }, { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "power2.out" });
 }
 
 function closePopup() {
@@ -633,11 +572,6 @@ function closePopup() {
   tl.to(popModalEl.value, { opacity: 0, y: 10, scale: 0.985, duration: 0.18 }, 0)
     .to(popOverlayEl.value, { opacity: 0, duration: 0.18 }, 0)
     .add(() => (popup.open = false));
-}
-
-function closePopupAndBack() {
-  closePopup();
-  setTimeout(() => router.back(), 220);
 }
 
 // ---------- Tags ----------
@@ -698,8 +632,7 @@ function setGalleryPreviews(files) {
   });
 }
 
-// ---------- ✅ Optimize (SAFE) ----------
-// If /api/optimize is 404/501/any error -> return original file (no crash)
+// ---------- ✅ Optimize ----------
 async function optimizeWithSharp(file, preset) {
   try {
     const fd = new FormData();
@@ -734,7 +667,7 @@ async function onPickMain(e) {
   try {
     const out = await optimizeWithSharp(file, "main");
     form.heroImage = out;
-    form.sideImage = out; // UI only
+    form.sideImage = out;
     setMainPreview(out);
   } finally {
     isOptimizingMain.value = false;
@@ -831,7 +764,6 @@ function resetForm() {
   tagDraft.value = "";
 }
 
-// ✅ Submit entrypoint (เปิด Confirm ก่อน)
 async function onSubmit() {
   if (isSubmitting.value || confirm.open) return;
 
@@ -845,7 +777,6 @@ async function onSubmit() {
   await showConfirm();
 }
 
-// ✅ Insert to DB (logic จริง)
 async function doSubmitReal() {
   const date_time = buildDateTime(form.date, form.timestamp);
 
@@ -870,7 +801,6 @@ async function doSubmitReal() {
     }
 
     const data = await res.json().catch(() => ({}));
-    console.log("INSERT OK:", data);
 
     gsap.to(actionsEl.value, { y: -2, duration: 0.18, yoyo: true, repeat: 1, ease: "power2.out" });
     resetForm();
@@ -885,11 +815,6 @@ async function doSubmitReal() {
 function btnHover(e, enter) {
   gsap.to(e.currentTarget, { y: enter ? -2 : 0, duration: 0.22, ease: "power2.out" });
 }
-function navHover(e, enter) {
-  const el = e.currentTarget;
-  if (el.classList.contains("active")) return;
-  gsap.to(el, { x: enter ? 3 : 0, duration: 0.18, ease: "power2.out" });
-}
 
 function onKey(e) {
   if (e.key !== "Escape") return;
@@ -900,16 +825,11 @@ function onKey(e) {
 onMounted(() => {
   window.addEventListener("keydown", onKey);
 
-  gsap.set(".js-side", { opacity: 0, x: -18 });
-  gsap.set(".js-sideItem", { opacity: 0, y: 10 });
   gsap.set(".js-card", { opacity: 0, y: 14, scale: 0.985 });
   gsap.set(".js-reveal", { opacity: 0, y: 10 });
 
   const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-  tl.to(".js-side", { opacity: 1, x: 0, duration: 0.55 }, 0)
-    .to(".js-sideItem", { opacity: 1, y: 0, stagger: 0.06, duration: 0.42 }, 0.12)
-    .to(".js-card", { opacity: 1, y: 0, scale: 1, duration: 0.55 }, 0.12)
-    .to(".js-reveal", { opacity: 1, y: 0, stagger: 0.06, duration: 0.45 }, 0.18);
+  tl.to(".js-card", { opacity: 1, y: 0, scale: 1, duration: 0.55 }, 0).to(".js-reveal", { opacity: 1, y: 0, stagger: 0.06, duration: 0.45 }, 0.06);
 
   if (galleryDropEl.value) {
     gsap.to(galleryDropEl.value, { y: -2, duration: 2.2, yoyo: true, repeat: -1, ease: "sine.inOut" });
@@ -1006,157 +926,16 @@ onBeforeUnmount(() => {
   background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.34), transparent 62%);
 }
 
-/* Layout */
+/* ✅ Layout (NO SIDEBAR) */
 .layout {
-  display: grid;
-  grid-template-columns: 270px 1fr;
-  gap: 14px;
-  align-items: start;
+  display: block;
 }
-
-/* Sidebar */
-.sidebar {
-  position: sticky;
-  top: 18px;
-  height: calc(100vh - 36px);
-  border-radius: 22px;
-  padding: 16px;
-  background: rgba(8, 12, 28, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.sidebar::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  background: linear-gradient(
-    90deg,
-    rgba(56, 189, 248, 0.45),
-    rgba(99, 102, 241, 0.22),
-    rgba(14, 165, 233, 0.2),
-    rgba(56, 189, 248, 0.45)
-  );
-  opacity: 0.14;
-  filter: blur(14px);
-  pointer-events: none;
-  animation: holo 7s linear infinite;
-}
-@keyframes holo {
-  0% {
-    transform: translateX(-16%);
-  }
-  100% {
-    transform: translateX(16%);
-  }
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.brandMark {
-  width: 50px;
-  height: 50px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.5), rgba(99, 102, 241, 0.28));
-  border: 1px solid #fff;
-}
-.brandName {
-  font-weight: 900;
-  letter-spacing: 0.2px;
-}
-.brandSub {
-  margin-top: 2px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.nav {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 2px;
-}
-.navItem {
-  text-decoration: none;
-  position: relative;
-  width: 100%;
-  border-radius: 14px;
-  padding: 12px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.78);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-}
-.navItem:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.92);
-  border-color: rgba(56, 189, 248, 0.22);
-  box-shadow: 0 12px 30px rgba(56, 189, 248, 0.1);
-}
-.navItem.active {
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.22), rgba(99, 102, 241, 0.14));
-  color: rgba(255, 255, 255, 0.95);
-  border-color: rgba(56, 189, 248, 0.24);
-  box-shadow: 0 18px 40px rgba(56, 189, 248, 0.12);
-}
-.navIcon {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-}
-.navLabel {
-  font-weight: 800;
-  font-size: 13px;
-}
-.navPill {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(56, 189, 248, 0);
-}
-.navItem.active .navPill {
-  background: rgba(56, 189, 248, 0.95);
-  box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.14);
-}
-
-.spacer {
-  flex: 1;
-}
-.logout {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.78);
-  border-radius: 14px;
-  padding: 12px 12px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  cursor: pointer;
-}
-
-/* Right content */
 .content {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* Header */
@@ -1205,6 +984,14 @@ onBeforeUnmount(() => {
 }
 
 /* Card */
+@keyframes holo {
+  0% {
+    transform: translateX(-16%);
+  }
+  100% {
+    transform: translateX(16%);
+  }
+}
 .card {
   position: relative;
   background: var(--glass2);
@@ -1219,13 +1006,7 @@ onBeforeUnmount(() => {
   content: "";
   position: absolute;
   inset: -2px;
-  background: linear-gradient(
-    90deg,
-    rgba(56, 189, 248, 0.4),
-    rgba(99, 102, 241, 0.22),
-    rgba(14, 165, 233, 0.18),
-    rgba(56, 189, 248, 0.4)
-  );
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.4), rgba(99, 102, 241, 0.22), rgba(14, 165, 233, 0.18), rgba(56, 189, 248, 0.4));
   opacity: 0.18;
   filter: blur(14px);
   pointer-events: none;
@@ -1303,13 +1084,13 @@ onBeforeUnmount(() => {
   color: var(--danger);
 }
 
-/* Date input "tech" */
+/* Date input */
 :deep(.dateInp) {
   font-weight: 900;
   letter-spacing: 0.2px;
 }
 
-/* Tech Calendar Container (Flatpickr) */
+/* Calendar */
 :deep(.techCalendar) {
   background: rgba(6, 10, 26, 0.92);
   border: 1px solid rgba(56, 189, 248, 0.22);
@@ -1713,27 +1494,7 @@ onBeforeUnmount(() => {
 }
 
 /* responsive */
-@media (max-width: 1100px) {
-  .layout {
-    grid-template-columns: 86px 1fr;
-  }
-  .brandText,
-  .navLabel {
-    display: none;
-  }
-  .sidebar {
-    padding: 14px 10px;
-  }
-}
 @media (max-width: 980px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-  .sidebar {
-    position: relative;
-    height: auto;
-    top: auto;
-  }
   .row {
     grid-template-columns: 1fr;
   }
