@@ -321,10 +321,12 @@ const committees = [
   { key: "ປະທານສະພາບໍລິຫານ", label: "ປະທານສະພາບໍລິຫານ", icon: "fa-solid fa-crown" },
   { key: "ຮອງປະທານສະພາບໍລິຫານ", label: "ຮອງປະທານສະພາບໍລິຫານ", icon: "fa-solid fa-chess-king" },
   { key: "ຄະນະກຳມະການກວດກາ", label: "ຄະນະກຳມະການກວດກາ", icon: "fa-solid fa-clipboard-check" },
-  { key: "ຄະນະກຳມະການຄົ້ນຄວ້ານະໂຍບາຍ", label: "ຄະນະກຳມະການຄົ້ນຄວ້ານະໂຍບາຍ", icon: "fa-solid fa-shield-virus" },
-  { key: "ຄະນະກຳມະການຄຸ້ມຄອງຄວາມສ່ຽງ", label: "ຄະນະກຳມະການຄຸ້ມຄອງຄວາມສ່ຽງ", icon: "fa-solid fa-user-group" },
-  { key: "ຄະນະກຳມະການຕິດຕາມພັດທະນາລະບົບ", label: "ຄະນະກຳມະການຕິດຕາມພັດທະນາລະບົບ", icon: "fa-solid fa-award" },
+  { key: "ຄະນະກຳມະການຄົ້ນຄວ້ານະໂຍບາຍ", label: "ຄະນະກຳມະການຄົ້ນຄວ້ານະໂຍບາຍ", icon: "fa-solid fa-building-shield" },
+  { key: "ຄະນະກຳມະການຄຸ້ມຄອງຄວາມສ່ຽງ", label: "ຄະນະກຳມະການຄຸ້ມຄອງຄວາມສ່ຽງ", icon: "fa-solid fa-triangle-exclamation" },
+  { key: "ຄະນະກຳມະການຕິດຕາມພັດທະນາລະບົບ", label: "ຄະນະກຳມະການຕິດຕາມພັດທະນາລະບົບ", icon: "fa-solid fa-code" },
 ];
+
+
 
 const DEFAULT_COMMITTEE = committees[0]?.key || "";
 

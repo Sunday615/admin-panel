@@ -18,6 +18,8 @@ import announcementedit from '../view/announcement/announcementedit.vue'
 import jobedit from '../view/display/job/jobedit.vue'
 import Board_directorview from '../view/board_director/board_directorview.vue'
 import Board_directoredit from '../view/board_director/board_directoredit.vue'
+import lapnetview from '../view/lapnet/lapnetview.vue'
+import Lapnetedit from '../view/lapnet/lapnetedit.vue'
 const routes = [
   {
     path: '/',
@@ -109,6 +111,16 @@ const routes = [
     path: '/lapnet_employee',
     name: 'lapnet',
     component: Lapnet,
+  },
+   {
+    path: '/lapnetview',
+    name: 'lapnetview',
+    component: lapnetview,
+  },
+   {
+    path: '/lapnetedit',
+    name: '/lapnetedit',
+    component: Lapnetedit,
   },
  
 

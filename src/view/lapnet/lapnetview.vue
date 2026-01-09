@@ -1,3 +1,4 @@
+<!-- LapnetView.vue -->
 <template>
   <div ref="rootEl" class="app tech">
     <!-- Ambient glow -->
@@ -15,7 +16,7 @@
         <!-- Search this page -->
         <div class="searchWrap">
           <span class="searchIcon"><i class="fa-solid fa-magnifying-glass"></i></span>
-          <input v-model="q" class="search" placeholder="Search board directors..." />
+          <input v-model="q" class="search" placeholder="Search employees..." />
         </div>
 
         <div class="topActions">
@@ -24,7 +25,7 @@
             type="button"
             aria-label="Refresh"
             title="Refresh"
-            @click="fetchDirectors"
+            @click="fetchEmployees"
             @mouseenter="iconHover($event, true)"
             @mouseleave="iconHover($event, false)"
           >
@@ -32,22 +33,22 @@
           </button>
 
           <div class="profile">
-            <div class="avatar">P</div>
+            <div class="avatarTop">A</div>
             <div class="profileText">
-              <div class="profileName">Parisa</div>
-              <div class="profileRole">Admin</div>
+              <div class="profileName">Admin</div>
+              <div class="profileRole">Lapnet</div>
             </div>
           </div>
         </div>
       </header>
 
       <section class="mainBody">
-        <!-- ===== Board Director Content ===== -->
         <div class="membersPage">
           <!-- Header -->
           <div class="pageTop js-reveal">
             <div class="titleBlock">
-              <div class="pageTitle">Board Director</div>
+              <div class="pageTitle">Employee (Lapnet)</div>
+              <div class="pageSub">View / Edit / Delete + Highlight row after insert</div>
             </div>
 
             <div class="actions">
@@ -55,7 +56,7 @@
                 <span class="filterIcon"><i class="fa-solid fa-filter"></i></span>
                 <select v-model="filterKey" class="filterSelect">
                   <option value="">Filter by: (All)</option>
-                  <option v-for="k in filterKeys" :key="k" :value="k">{{ k }}</option>
+                  <option v-for="k in filterKeys" :key="k" :value="k">{{ colLabel(k) }}</option>
                 </select>
                 <input v-model="filterValue" class="filterInput" placeholder="value..." />
               </div>
@@ -69,7 +70,7 @@
             <div class="metaPill">
               <i class="fa-solid fa-database"></i>
               <span>Total:</span>
-              <b>{{ directors.length }}</b>
+              <b>{{ employees.length }}</b>
               <span>records</span>
             </div>
 
@@ -90,14 +91,11 @@
               <span>records</span>
             </div>
 
-            <!-- ✅ ไปหน้า insert -->
-            <router-link to="/board_director">
-              <div class="metaPill" id="add_member">
-                <i class="fa-solid fa-plus"></i>
-                <span>Add Board Director</span>
-                <b></b>
-              </div>
-            </router-link>
+            <!-- ✅ ไปหน้า insert (แก้ path ได้ตาม route โปรเจค) -->
+            <button class="metaPill addPill" type="button" @click="goInsert">
+              <i class="fa-solid fa-plus"></i>
+              <span>Add Employee</span>
+            </button>
           </div>
 
           <!-- Table -->
@@ -135,49 +133,27 @@
                   @mouseenter="rowHover($event, true)"
                   @mouseleave="rowHover($event, false)"
                 >
-                  <td v-for="col in tableCols" :key="col" class="td" :class="{ fullText: isFullTextCol(col) }">
-                    <!-- ✅ No + banklogo mini -->
+                  <td v-for="col in tableCols" :key="col" class="td">
+                    <!-- ✅ No + avatar mini -->
                     <template v-if="isNoCol(col)">
                       <div class="idCell">
                         <div>{{ pageStart + localIdx + 1 }}</div>
-                        <img v-if="bankLogoUrlOf(m)" class="logoMini" :src="bankLogoUrlOf(m)" alt="Bank logo" />
+                        <img v-if="imageUrlOf(m)" class="logoMini" :src="imageUrlOf(m)" alt="employee" />
+                        <div v-else class="logoMiniEmpty"><i class="fa-solid fa-user"></i></div>
                       </div>
                     </template>
 
-                    <!-- ✅ Committee: box + icon เหมือนหน้า insert -->
-                    <template v-else-if="isCommitteeCol(col)">
-                      <div class="chips" @click.stop>
-                        <span
-                          v-for="(c, i) in committeeItems(m?.committee)"
-                          :key="`c-${i}`"
-                          class="chip"
-                          :class="`chip-${c.key}`"
-                          :title="c.label"
-                        >
-                          <span class="chipLeft">
-                            <span class="chipIconWrap">
-                              <i class="chipIcon" :class="c.icon"></i>
-                            </span>
-                            <span class="chipText">{{ c.label }}</span>
-                          </span>
-                          <span class="chipDot"></span>
-                        </span>
-
-                        <span v-if="committeeItems(m?.committee).length === 0" class="chip chipEmpty">
-                          <span class="chipLeft">
-                            <span class="chipIconWrap">
-                              <i class="chipIcon fa-solid fa-tag"></i>
-                            </span>
-                            <span class="chipText">-</span>
-                          </span>
-                          <span class="chipDot"></span>
-                        </span>
+                    <!-- ✅ Image column -->
+                    <template v-else-if="isImageCol(col)">
+                      <div class="imgMiniCell">
+                        <img v-if="imageUrlOf(m)" class="imgMini" :src="imageUrlOf(m)" alt="employee" />
+                        <div v-else class="imgMiniEmpty"><i class="fa-solid fa-user"></i></div>
                       </div>
                     </template>
 
                     <!-- ✅ Default -->
                     <template v-else>
-                      {{ formatCell(m?.[col], col) }}
+                      {{ formatCell(getField(m, col), col) }}
                     </template>
                   </td>
 
@@ -263,7 +239,7 @@
               <div ref="modalEl" class="modal">
                 <div class="modalTop">
                   <div class="modalTitle">
-                    <i class="fa-solid fa-people-group"></i>
+                    <i class="fa-solid fa-id-card"></i>
                     {{ titleOf(selected) }}
                   </div>
 
@@ -280,22 +256,32 @@
                 </div>
 
                 <div class="modalBody">
-                  <!-- ✅ Images -->
                   <div class="imageRow">
                     <div class="imgCard">
-                      <div class="imgLabel">Bank Logo</div>
-                      <img v-if="bankLogoUrlOf(selected)" class="bigImg" :src="bankLogoUrlOf(selected)" alt="Bank logo" />
+                      <div class="imgLabel">Employee Image</div>
+                      <img v-if="imageUrlOf(selected)" class="bigImg" :src="imageUrlOf(selected)" alt="employee" />
                       <div v-else class="imgEmpty">-</div>
                     </div>
 
                     <div class="imgCard">
-                      <div class="imgLabel">Profile</div>
-                      <img v-if="profileUrlOf(selected)" class="bigImg" :src="profileUrlOf(selected)" alt="Profile" />
-                      <div v-else class="imgEmpty">-</div>
+                      <div class="imgLabel">Quick Info</div>
+                      <div class="quickInfo">
+                        <div class="qi"><span class="k">ID</span><span class="v">{{ rowKey(selected, "") }}</span></div>
+                        <div class="qi"><span class="k">Name</span><span class="v">{{ getField(selected, "name") || "-" }}</span></div>
+                        <div class="qi"><span class="k">Role</span><span class="v">{{ getField(selected, "role") || "-" }}</span></div>
+                        <div class="qi">
+                          <span class="k">Dept</span><span class="v">{{ getField(selected, "department") || "-" }}</span>
+                        </div>
+                        <div class="qi">
+                          <span class="k">Position</span><span class="v">{{ getField(selected, "position") || "-" }}</span>
+                        </div>
+                        <div class="qi">
+                          <span class="k">Created</span><span class="v">{{ formatDDMMYY(getField(selected, "create_at")) || "-" }}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <!-- ✅ KV -->
                   <div class="kvGrid">
                     <div class="kv">
                       <div class="k">No</div>
@@ -337,7 +323,7 @@
                 </div>
 
                 <div class="confirmTitle">
-                  {{ confirmAction === "delete" ? "Delete Board Director?" : "Edit Board Director?" }}
+                  {{ confirmAction === "delete" ? "Delete Employee?" : "Edit Employee?" }}
                 </div>
 
                 <div class="confirmText">
@@ -348,7 +334,7 @@
                     {{
                       confirmAction === "delete"
                         ? "This action cannot be undone."
-                        : "You will be redirected to /boarddirectoredit."
+                        : "You will be redirected to /lapnetedit."
                     }}
                   </div>
                 </div>
@@ -409,9 +395,15 @@ const topbarEl = ref(null);
 const userName = "Arkhan";
 
 /* =========================
+   API
+   ========================= */
+const API_BASE = import.meta.env?.VITE_API_BASE_URL || import.meta.env?.VITE_API_URL || "http://localhost:3000";
+const EMP_API = `${API_BASE}/api/emp_lapnet`;
+
+/* =========================
    DATA
    ========================= */
-const directors = ref([]);
+const employees = ref([]);
 const loading = ref(false);
 const error = ref("");
 
@@ -419,8 +411,8 @@ const q = ref("");
 const filterKey = ref("");
 const filterValue = ref("");
 
-const sortKey = ref("");
-const sortDir = ref("asc");
+const sortKey = ref("create_at");
+const sortDir = ref("desc");
 
 const selected = ref(null);
 const overlayEl = ref(null);
@@ -458,124 +450,6 @@ const toast = ref({ open: false, type: "success", text: "" });
 const toastEl = ref(null);
 let toastTimer = null;
 
-/* =========================
-   Committee (box + icon)  ✅ FIX: key เป็น slug ให้ตรงกับ CSS
-   ========================= */
-function isCommitteeCol(col) {
-  return String(col || "").toLowerCase() === "committee";
-}
-
-// ใส่ key เป็น slug (ใช้กับ class chip-xxx) + label เป็นภาษาที่จะแสดง
-// aliases รองรับหลายรูปแบบจาก backend
-const COMMITTEES = [
-  {
-    key: "president",
-    label: "ປະທານສະພາບໍລິຫານ",
-    icon: "fa-solid fa-crown",
-    aliases: ["ປະທານສະພາບໍລິຫານ", "president", "chairman", "chair"],
-  },
-  {
-    key: "vice_president",
-    label: "ຮອງປະທານສະພາບໍລິຫານ",
-    icon: "fa-solid fa-chess-king",
-    aliases: ["ຮອງປະທານສະພາບໍລິຫານ", "vice president", "vice_president", "vice-chair", "vice chair"],
-  },
-  {
-    key: "audit",
-    label: "ຄະນະກຳມະການກວດກາ",
-    icon: "fa-solid fa-clipboard-check",
-    aliases: ["ຄະນະກຳມະການກວດກາ", "audit", "audit committee"],
-  },
-  {
-    key: "nomination",
-    label: "ຄະນະກຳມະການຄົ້ນຄວ້ານະໂຍບາຍ",
-    icon: "fa-solid fa-building-shield",
-    aliases: ["ຄະນະກຳມະການຄົ້ນຄວ້ານະໂຍບາຍ", "nomination", "policy", "research"],
-  },
-  {
-    key: "risk",
-    label: "ຄະນະກຳມະການຄຸ້ມຄອງຄວາມສ່ຽງ",
-    icon: "fa-solid fa-triangle-exclamation",
-    aliases: ["ຄະນະກຳມະການຄຸ້ມຄອງຄວາມສ່ຽງ", "risk", "risk committee"],
-  },
-  {
-    key: "it",
-    label: "ຄະນະກຳມະການຕິດຕາມພັດທະນາລະບົບ",
-    icon: "fa-solid fa-code",
-    aliases: ["ຄະນະກຳມະການຕິດຕາມພັດທະນາລະບົບ", "it", "technology", "system"],
-  },
-];
-
-function parseCommitteeRaw(val) {
-  if (val === null || val === undefined) return [];
-
-  if (Array.isArray(val)) {
-    return val.map((x) => String(x ?? "").trim()).filter(Boolean);
-  }
-
-  const s = String(val).trim();
-  if (!s || s === "-") return [];
-
-  if (s.startsWith("[") && s.endsWith("]")) {
-    try {
-      const arr = JSON.parse(s);
-      if (Array.isArray(arr)) return arr.map((x) => String(x ?? "").trim()).filter(Boolean);
-    } catch {}
-  }
-
-  return s
-    .split(/[\n,;|/]+/g)
-    .map((x) => x.trim())
-    .filter(Boolean);
-}
-
-function normalizeCommittee(raw) {
-  const s = String(raw ?? "").trim();
-  if (!s) return null;
-
-  const lower = s.toLowerCase();
-
-  // match by aliases (case-insensitive)
-  for (const c of COMMITTEES) {
-    const aliases = (c.aliases || []).map((a) => String(a).toLowerCase());
-    if (aliases.includes(lower)) return { key: c.key, label: c.label, icon: c.icon };
-  }
-
-  // heuristic fallback
-  if (lower.includes("audit")) return COMMITTEES.find((x) => x.key === "audit");
-  if (lower.includes("risk")) return COMMITTEES.find((x) => x.key === "risk");
-  if (lower.includes("nomination") || lower.includes("policy") || lower.includes("research"))
-    return COMMITTEES.find((x) => x.key === "nomination");
-  if (lower === "it" || lower.includes("technology") || lower.includes("system")) return COMMITTEES.find((x) => x.key === "it");
-  if (lower.includes("president") && !lower.includes("vice")) return COMMITTEES.find((x) => x.key === "president");
-  if (lower.includes("vice")) return COMMITTEES.find((x) => x.key === "vice_president");
-
-  // fallback: โชว์ข้อความเดิม + icon tag
-  return { key: "custom", label: s, icon: "fa-solid fa-tag" };
-}
-
-function uniqBy(list, keyFn) {
-  const seen = new Set();
-  const out = [];
-  for (const x of list) {
-    const k = keyFn(x);
-    if (seen.has(k)) continue;
-    seen.add(k);
-    out.push(x);
-  }
-  return out;
-}
-
-function committeeItems(val) {
-  const raw = parseCommitteeRaw(val);
-  const items = raw.map(normalizeCommittee).filter(Boolean);
-  return uniqBy(items, (x) => `${x.key}|${x.label}`);
-}
-
-/* =========================
-   GSAP helpers
-   ========================= */
-let gsapCtx = null;
 const reducedMotion =
   typeof window !== "undefined" && window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)").matches : false;
 
@@ -590,7 +464,6 @@ function ensureHoverQuick(el) {
   if (!el) return null;
   if (hoverQ.has(el)) return hoverQ.get(el);
   const q = {
-    x: gsap.quickTo(el, "x", { duration: DUR.fast, ease: "power3.out" }),
     y: gsap.quickTo(el, "y", { duration: DUR.fast, ease: "power3.out" }),
     scale: gsap.quickTo(el, "scale", { duration: DUR.fast, ease: "power3.out" }),
   };
@@ -622,41 +495,6 @@ function animateRows() {
   );
 }
 
-async function openConfirm(action, row) {
-  confirmAction.value = action;
-  confirmTarget.value = row;
-  confirmOpen.value = true;
-  confirmLoading.value = false;
-
-  await nextTick();
-  popIn(confirmEl.value, { y: 18, rotateX: 10, duration: reducedMotion ? 0 : 0.55 });
-}
-
-function closeConfirm() {
-  if (!confirmOpen.value) return;
-
-  const el = confirmEl.value;
-  if (!el || reducedMotion) {
-    confirmOpen.value = false;
-    confirmLoading.value = false;
-    confirmTarget.value = null;
-    return;
-  }
-
-  gsap.to(el, {
-    autoAlpha: 0,
-    y: 10,
-    scale: 0.985,
-    duration: DUR.fast,
-    ease: "power2.inOut",
-    onComplete: () => {
-      confirmOpen.value = false;
-      confirmLoading.value = false;
-      confirmTarget.value = null;
-    },
-  });
-}
-
 function showToast(type, text) {
   toast.value = { open: true, type, text };
   if (toastTimer) clearTimeout(toastTimer);
@@ -681,10 +519,41 @@ function showToast(type, text) {
 }
 
 /* =========================
-   API
+   Helpers: fields + media
    ========================= */
-const API_BASE = import.meta.env?.VITE_API_BASE_URL || import.meta.env?.VITE_API_URL || "http://localhost:3000";
-const DIRECTORS_API = `${API_BASE}/api/boarddirector`;
+const NO_COL = "__no__";
+function isNoCol(k) {
+  return String(k) === NO_COL;
+}
+function isImageCol(k) {
+  return String(k || "").toLowerCase() === "image";
+}
+
+function rowKey(m, i) {
+  return m?.emp_id ?? m?.empId ?? m?.id ?? m?.ID ?? `${i}`;
+}
+
+function titleOf(m) {
+  const nm = getField(m, "name");
+  return nm || `Employee #${rowKey(m, "-")}`;
+}
+
+function getField(m, col) {
+  if (!m) return "";
+  const key = String(col || "").toLowerCase();
+
+  // รองรับหลายชื่อ field จาก backend
+  if (key === "create_at" || key === "createat") return m?.create_at ?? m?.createAt ?? m?.created_at ?? m?.create_date ?? m?.timestamp ?? "";
+  if (key === "position") return m?.position ?? m?.row ?? m?.pos ?? "";
+  if (key === "image") return m?.image ?? m?.imageprofile ?? m?.imageProfile ?? m?.profile ?? m?.img ?? "";
+  if (key === "name") return m?.name ?? m?.empName ?? m?.employee_name ?? m?.employeeName ?? "";
+  if (key === "role") return m?.role ?? m?.job ?? m?.title ?? "";
+  if (key === "department") return m?.department ?? m?.dept ?? "";
+  if (key === "emp_id" || key === "empid") return m?.emp_id ?? m?.empId ?? m?.id ?? "";
+
+  // fallback direct
+  return m?.[col] ?? m?.[key] ?? "";
+}
 
 function resolveMediaUrl(src) {
   if (!src) return "";
@@ -695,41 +564,21 @@ function resolveMediaUrl(src) {
   return `${API_BASE}/${s}`;
 }
 
-function bankLogoUrlOf(m) {
-  return resolveMediaUrl(m?.banklogo);
-}
-function profileUrlOf(m) {
-  return resolveMediaUrl(m?.profile);
-}
-
-/* =========================
-   Helpers
-   ========================= */
-const NO_COL = "__no__";
-function isNoCol(k) {
-  return String(k) === NO_COL;
-}
-
-function rowKey(m, i) {
-  return m?.idboarddirector ?? `${i}`;
-}
-
-function titleOf(m) {
-  return m?.name || m?.bankname || `Board Director #${m?.idboarddirector ?? "-"}`;
+function imageUrlOf(m) {
+  return resolveMediaUrl(getField(m, "image"));
 }
 
 function colLabel(col) {
   if (isNoCol(col)) return "No";
   const k = String(col || "").toLowerCase();
-  if (k === "idboarddirector") return "ID";
-  if (k === "bankname") return "Bank Name";
-  if (k === "committee") return "Committee";
-  if (k === "createat") return "Created";
+  if (k === "emp_id") return "ID";
+  if (k === "name") return "Employee Name";
+  if (k === "role") return "Role";
+  if (k === "department") return "Department";
+  if (k === "position") return "Position";
+  if (k === "create_at") return "Created";
+  if (k === "image") return "Image";
   return col;
-}
-
-function isFullTextCol(_col) {
-  return false;
 }
 
 function formatDDMMYY(input) {
@@ -757,12 +606,12 @@ function formatDDMMYY(input) {
 }
 
 function formatCell(v, col = "") {
-  if (v === null || v === undefined) return "-";
+  if (v === null || v === undefined || v === "") return "-";
   if (typeof v === "boolean") return v ? "true" : "false";
   if (typeof v === "number") return String(v);
 
   const key = String(col || "").toLowerCase();
-  if (key === "createat") return formatDDMMYY(v);
+  if (key === "create_at") return formatDDMMYY(v);
 
   if (typeof v === "string") return v.length > 40 ? v.slice(0, 40) + "…" : v;
 
@@ -792,18 +641,18 @@ function compare(a, b) {
 }
 
 const rows = computed(() => {
-  let arr = directors.value;
+  let arr = employees.value;
 
   const s = q.value.trim().toLowerCase();
   if (s) arr = arr.filter((m) => JSON.stringify(m).toLowerCase().includes(s));
 
   const fk = filterKey.value;
   const fv = filterValue.value.trim().toLowerCase();
-  if (fk && fv) arr = arr.filter((m) => normalize(m?.[fk]).includes(fv));
+  if (fk && fv) arr = arr.filter((m) => normalize(getField(m, fk)).includes(fv));
 
   if (sortKey.value && !isNoCol(sortKey.value)) {
     const key = sortKey.value;
-    arr = [...arr].sort((x, y) => compare(x?.[key], y?.[key]));
+    arr = [...arr].sort((x, y) => compare(getField(x, key), getField(y, key)));
     if (sortDir.value === "desc") arr.reverse();
   }
 
@@ -888,8 +737,8 @@ watch(
 /* =========================
    Columns + Filters
    ========================= */
-const tableCols = computed(() => [NO_COL, "committee", "bankname", "name", "role", "createat"]);
-const filterKeys = computed(() => ["committee", "bankname", "name", "role", "createat"]);
+const tableCols = computed(() => [NO_COL, "name", "role", "department", "position", "create_at"]);
+const filterKeys = computed(() => ["emp_id", "name", "role", "department", "position", "create_at"]);
 
 function toggleSort(col) {
   if (isNoCol(col)) return;
@@ -905,13 +754,53 @@ function clearFilters() {
   q.value = "";
   filterKey.value = "";
   filterValue.value = "";
-  sortKey.value = "";
-  sortDir.value = "asc";
+  sortKey.value = "create_at";
+  sortDir.value = "desc";
+}
+
+function goInsert() {
+  // ✅ เปลี่ยน path ให้ตรงกับ route insert ของโปรเจคคุณ
+  router.push({ path: "/lapnet_employee" });
 }
 
 /* =========================
    Actions (Edit/Delete via Confirm)
    ========================= */
+async function openConfirm(action, row) {
+  confirmAction.value = action;
+  confirmTarget.value = row;
+  confirmOpen.value = true;
+  confirmLoading.value = false;
+
+  await nextTick();
+  popIn(confirmEl.value, { y: 18, rotateX: 10, duration: reducedMotion ? 0 : 0.55 });
+}
+
+function closeConfirm() {
+  if (!confirmOpen.value) return;
+
+  const el = confirmEl.value;
+  if (!el || reducedMotion) {
+    confirmOpen.value = false;
+    confirmLoading.value = false;
+    confirmTarget.value = null;
+    return;
+  }
+
+  gsap.to(el, {
+    autoAlpha: 0,
+    y: 10,
+    scale: 0.985,
+    duration: DUR.fast,
+    ease: "power2.inOut",
+    onComplete: () => {
+      confirmOpen.value = false;
+      confirmLoading.value = false;
+      confirmTarget.value = null;
+    },
+  });
+}
+
 function askEdit(m) {
   openConfirm("edit", m);
 }
@@ -933,7 +822,7 @@ async function confirmProceed() {
     closeConfirm();
     showToast("info", "Opening editor…");
 
-    router.push({ path: "/boarddirectoredit", query: { id: String(id ?? "") } });
+    router.push({ path: "/lapnetedit", query: { id: String(id ?? "") } });
 
     setBusy(String(id), false);
     confirmLoading.value = false;
@@ -942,15 +831,15 @@ async function confirmProceed() {
 
   if (!id) return;
 
-  const before = [...directors.value];
-  directors.value = directors.value.filter((x) => String(rowKey(x, "")) !== String(id));
+  const before = [...employees.value];
+  employees.value = employees.value.filter((x) => String(rowKey(x, "")) !== String(id));
 
   try {
     confirmLoading.value = true;
     setBusy(String(id), true);
     error.value = "";
 
-    const res = await fetch(`${DIRECTORS_API}/${encodeURIComponent(String(id))}`, { method: "DELETE" });
+    const res = await fetch(`${EMP_API}/${encodeURIComponent(String(id))}`, { method: "DELETE" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     if (selected.value && String(rowKey(selected.value, "")) === String(id)) selected.value = null;
@@ -959,9 +848,9 @@ async function confirmProceed() {
     showToast("success", `Deleted: ${name}`);
   } catch (e) {
     console.error(e);
-    directors.value = before;
+    employees.value = before;
     closeConfirm();
-    showToast("error", "Delete failed (backend must have DELETE /api/boarddirector/:id)");
+    showToast("error", "Delete failed (backend must have DELETE /api/emp_lapnet/:id)");
   } finally {
     confirmLoading.value = false;
     setBusy(String(id), false);
@@ -982,13 +871,11 @@ const selectedRowNo = computed(() => {
 
 const flatEntries = computed(() => {
   if (!selected.value) return [];
-  const keys = ["idboarddirector", "committee", "bankname", "name", "role", "createat"];
-  return keys
-    .filter((k) => k in (selected.value || {}))
-    .map((k) => ({
-      k: colLabel(k),
-      v: k === "createat" ? formatDDMMYY(selected.value?.[k]) : formatCell(selected.value?.[k], k),
-    }));
+  const keys = ["emp_id", "name", "role", "department", "position", "create_at"];
+  return keys.map((k) => ({
+    k: colLabel(k),
+    v: k === "create_at" ? formatDDMMYY(getField(selected.value, k)) : formatCell(getField(selected.value, k), k),
+  }));
 });
 
 async function openOverlay(m) {
@@ -1048,7 +935,7 @@ function closeOverlay() {
 }
 
 /* =========================
-   Route highlight (optional) ✅ ทำงานได้จริง: ใช้ data-rowid + useRoute
+   Route highlight ✅ (template เดิม)
    ========================= */
 const pendingHighlightId = ref("");
 
@@ -1145,14 +1032,14 @@ function unwrapApiList(payload) {
 
 function sortByCreateAtDesc(list) {
   const decorated = list.map((item, idx) => {
-    const ms = Date.parse(String(item?.createat ?? ""));
+    const ms = Date.parse(String(getField(item, "create_at") ?? ""));
     return { item, idx, ms: Number.isNaN(ms) ? -Infinity : ms };
   });
   decorated.sort((a, b) => b.ms - a.ms || a.idx - b.idx);
   return decorated.map((x) => x.item);
 }
 
-async function fetchDirectors() {
+async function fetchEmployees() {
   try {
     error.value = "";
     loading.value = true;
@@ -1160,7 +1047,7 @@ async function fetchDirectors() {
     if (abortCtrl) abortCtrl.abort();
     abortCtrl = new AbortController();
 
-    const res = await fetch(DIRECTORS_API, {
+    const res = await fetch(EMP_API, {
       signal: abortCtrl.signal,
       headers: { "Content-Type": "application/json" },
     });
@@ -1169,7 +1056,7 @@ async function fetchDirectors() {
     const data = await res.json();
     const list = unwrapApiList(data);
 
-    directors.value = sortByCreateAtDesc(list);
+    employees.value = sortByCreateAtDesc(list);
 
     await nextTick();
     animateRows();
@@ -1179,7 +1066,7 @@ async function fetchDirectors() {
   } catch (err) {
     if (err?.name === "AbortError") return;
     console.error(err);
-    error.value = "Failed to load board directors";
+    error.value = "Failed to load employees";
   } finally {
     loading.value = false;
   }
@@ -1222,8 +1109,7 @@ onMounted(async () => {
 
   await nextTick();
 
-  if (gsapCtx) gsapCtx.revert();
-  gsapCtx = gsap.context(() => {
+  gsap.context(() => {
     const sel = gsap.utils.selector(rootEl.value);
 
     const revealEls = sel(".js-reveal");
@@ -1240,7 +1126,7 @@ onMounted(async () => {
     ).to(others, { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: DUR.base, stagger: 0.06, ease: "power3.out" }, 0.08);
   }, rootEl.value);
 
-  await fetchDirectors();
+  await fetchEmployees();
 });
 
 onBeforeUnmount(() => {
@@ -1248,29 +1134,15 @@ onBeforeUnmount(() => {
   if (abortCtrl) abortCtrl.abort();
   if (toastTimer) clearTimeout(toastTimer);
   if (overlayTL) overlayTL.kill();
-  if (gsapCtx) gsapCtx.revert();
 });
 </script>
 
 <style scoped>
-/* =========================
-   DARK BLUE TECH THEME
-   ========================= */
 :root {
   color-scheme: dark;
 }
-
 * {
   box-sizing: border-box;
-}
-
-#add_member {
-  background-color: #28a475;
-}
-
-#add_member:hover {
-  background-color: #1e6f56;
-  transition: background-color 0.3s ease;
 }
 
 .app.tech {
@@ -1280,9 +1152,6 @@ onBeforeUnmount(() => {
   --panel2: rgba(255, 255, 255, 0.03);
   --stroke: rgba(255, 255, 255, 0.08);
 
-  --blueA: rgba(56, 189, 248, 0.55);
-  --blueB: rgba(99, 102, 241, 0.45);
-  --blueC: rgba(14, 165, 233, 0.3);
   --txt: rgba(255, 255, 255, 0.92);
   --muted: rgba(255, 255, 255, 0.55);
 
@@ -1310,138 +1179,6 @@ onBeforeUnmount(() => {
   mask-image: radial-gradient(circle at 35% 18%, black 0%, transparent 60%);
 }
 
-/* =========================
-   ✅ Committee chips (BOX + ICON)
-   ========================= */
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.chip {
-  --chip: rgba(56, 189, 248, 0.95);
-  --chipBorder: rgba(56, 189, 248, 0.18);
-  --chipGlow: rgba(56, 189, 248, 0.12);
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 14px;
-  border: 1px solid var(--chipBorder);
-  background: rgba(255, 255, 255, 0.03);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
-  white-space: nowrap;
-}
-
-.chipLeft {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.chipIconWrap {
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.18);
-}
-
-.chipIcon {
-  font-size: 13px;
-  color: var(--chip);
-}
-
-.chipText {
-  font-weight: 950;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.92);
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.chipDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--chip);
-  box-shadow: 0 0 0 6px var(--chipGlow);
-  flex: 0 0 auto;
-}
-
-.chip:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.chipEmpty {
-  opacity: 0.7;
-  --chip: rgba(255, 255, 255, 0.55);
-  --chipBorder: rgba(255, 255, 255, 0.12);
-  --chipGlow: rgba(255, 255, 255, 0.08);
-}
-
-/* optional: สีแยกตามประเภท */
-.chip-president {
-  --chip: rgba(250, 204, 21, 0.95);
-  --chipBorder: rgba(250, 204, 21, 0.22);
-  --chipGlow: rgba(250, 204, 21, 0.12);
-}
-.chip-vice_president {
-  --chip: rgba(99, 102, 241, 0.95);
-  --chipBorder: rgba(99, 102, 241, 0.22);
-  --chipGlow: rgba(99, 102, 241, 0.12);
-}
-.chip-audit {
-  --chip: rgba(56, 189, 248, 0.95);
-  --chipBorder: rgba(56, 189, 248, 0.22);
-  --chipGlow: rgba(56, 189, 248, 0.12);
-}
-.chip-risk {
-  --chip: rgba(34, 197, 94, 0.95);
-  --chipBorder: rgba(34, 197, 94, 0.22);
-  --chipGlow: rgba(34, 197, 94, 0.12);
-}
-.chip-remuneration {
-  --chip: rgba(251, 113, 133, 0.95);
-  --chipBorder: rgba(251, 113, 133, 0.22);
-  --chipGlow: rgba(251, 113, 133, 0.12);
-}
-.chip-nomination {
-  --chip: rgba(167, 139, 250, 0.95);
-  --chipBorder: rgba(167, 139, 250, 0.22);
-  --chipGlow: rgba(167, 139, 250, 0.12);
-}
-.chip-credit {
-  --chip: rgba(244, 114, 182, 0.95);
-  --chipBorder: rgba(244, 114, 182, 0.22);
-  --chipGlow: rgba(244, 114, 182, 0.12);
-}
-.chip-it {
-  --chip: rgba(14, 165, 233, 0.95);
-  --chipBorder: rgba(14, 165, 233, 0.22);
-  --chipGlow: rgba(14, 165, 233, 0.12);
-}
-.chip-hr {
-  --chip: rgba(245, 158, 11, 0.95);
-  --chipBorder: rgba(245, 158, 11, 0.22);
-  --chipGlow: rgba(245, 158, 11, 0.12);
-}
-
-/* ✅ Row highlight support */
-.tr.rowHL td {
-  background: var(--hlBg, rgba(34, 197, 94, 0.16));
-  box-shadow: var(--hlShadow, none);
-}
-
 /* Ambient glows */
 .glow {
   position: fixed;
@@ -1449,7 +1186,6 @@ onBeforeUnmount(() => {
   filter: blur(52px);
   opacity: 0.75;
 }
-
 .glow-a {
   width: 560px;
   height: 560px;
@@ -1457,7 +1193,6 @@ onBeforeUnmount(() => {
   top: 120px;
   background: radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.4), transparent 62%);
 }
-
 .glow-b {
   width: 560px;
   height: 560px;
@@ -1466,9 +1201,7 @@ onBeforeUnmount(() => {
   background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.34), transparent 62%);
 }
 
-/* =========================
-   Main
-   ========================= */
+/* Main */
 .main {
   padding: 18px;
   overflow: hidden;
@@ -1490,7 +1223,6 @@ onBeforeUnmount(() => {
   font-size: 13px;
   color: var(--muted);
 }
-
 .name {
   font-size: 22px;
   font-weight: 950;
@@ -1506,16 +1238,13 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   padding: 10px 12px;
 }
-
 .searchWrap:focus-within {
   border-color: rgba(56, 189, 248, 0.25);
   box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.08);
 }
-
 .searchIcon {
   color: rgba(255, 255, 255, 0.58);
 }
-
 .search {
   width: 100%;
   border: 0;
@@ -1531,7 +1260,6 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 12px;
 }
-
 .iconBtn {
   position: relative;
   width: 40px;
@@ -1545,15 +1273,13 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.86);
   will-change: transform;
 }
-
 .profile {
   display: flex;
   align-items: center;
   gap: 10px;
   padding-left: 6px;
 }
-
-.avatar {
+.avatarTop {
   width: 40px;
   height: 40px;
   border-radius: 14px;
@@ -1563,12 +1289,10 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(56, 189, 248, 0.14));
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
-
 .profileName {
   font-weight: 850;
   font-size: 13px;
 }
-
 .profileRole {
   font-size: 12px;
   color: var(--muted);
@@ -1580,19 +1304,15 @@ onBeforeUnmount(() => {
   overflow: auto;
   padding-right: 6px;
 }
-
 .mainBody::-webkit-scrollbar {
   width: 10px;
 }
-
 .mainBody::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 999px;
 }
 
-/* =========================
-   Page styles
-   ========================= */
+/* Page */
 .membersPage {
   padding: 6px 6px 18px;
   color: var(--txt);
@@ -1605,11 +1325,16 @@ onBeforeUnmount(() => {
   gap: 14px;
   margin-bottom: 12px;
 }
-
 .pageTitle {
   font-size: 20px;
   font-weight: 950;
   letter-spacing: 0.2px;
+}
+.pageSub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 800;
 }
 
 .actions {
@@ -1629,16 +1354,13 @@ onBeforeUnmount(() => {
   border-radius: 16px;
   padding: 10px 12px;
 }
-
 .filterWrap:focus-within {
   border-color: rgba(56, 189, 248, 0.22);
   box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.07);
 }
-
 .filterIcon {
   color: rgba(255, 255, 255, 0.55);
 }
-
 .filterSelect {
   width: 160px;
   border: 0;
@@ -1647,7 +1369,6 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.84);
   font-weight: 850;
 }
-
 .filterInput {
   flex: 1;
   border: 0;
@@ -1668,7 +1389,6 @@ onBeforeUnmount(() => {
   cursor: pointer;
   will-change: transform;
 }
-
 .ghostBtn:hover {
   border-color: rgba(56, 189, 248, 0.16);
   color: rgba(255, 255, 255, 0.92);
@@ -1693,6 +1413,16 @@ onBeforeUnmount(() => {
   font-weight: 850;
 }
 
+.addPill {
+  cursor: pointer;
+  background: rgba(40, 164, 117, 0.18);
+  border-color: rgba(40, 164, 117, 0.22);
+}
+.addPill:hover {
+  background: rgba(40, 164, 117, 0.26);
+  border-color: rgba(40, 164, 117, 0.35);
+}
+
 .errorPill {
   border-color: rgba(239, 68, 68, 0.25);
   color: rgba(239, 68, 68, 0.95);
@@ -1706,7 +1436,6 @@ onBeforeUnmount(() => {
   border-top-color: rgba(56, 189, 248, 0.7);
   animation: spin 0.85s linear infinite;
 }
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -1721,7 +1450,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(12px);
 }
-
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -1734,7 +1462,6 @@ onBeforeUnmount(() => {
   text-align: left;
   font-size: 13px;
 }
-
 .th {
   color: rgba(255, 255, 255, 0.8);
   font-weight: 950;
@@ -1742,7 +1469,6 @@ onBeforeUnmount(() => {
   user-select: none;
   cursor: pointer;
 }
-
 .thLast {
   cursor: default;
 }
@@ -1752,23 +1478,70 @@ onBeforeUnmount(() => {
   transition: background 160ms ease;
   will-change: transform;
 }
-
 .tr:hover {
   background: rgba(255, 255, 255, 0.03);
 }
-
 .td {
   color: rgba(255, 255, 255, 0.86);
   font-weight: 800;
 }
-
-.td.fullText {
-  white-space: normal;
-  word-break: break-word;
-}
-
 .tdLast {
   width: 320px;
+}
+
+/* ✅ Row highlight support */
+.tr.rowHL td {
+  background: var(--hlBg, rgba(34, 197, 94, 0.16));
+  box-shadow: var(--hlShadow, none);
+}
+
+/* No cell + mini avatar */
+.idCell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.logoMini {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+}
+.logoMiniEmpty {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+/* Image col mini */
+.imgMiniCell {
+  display: inline-flex;
+  align-items: center;
+}
+.imgMini {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+}
+.imgMiniEmpty {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(0, 0, 0, 0.14);
 }
 
 /* Actions */
@@ -1793,21 +1566,17 @@ onBeforeUnmount(() => {
   line-height: 1;
   will-change: transform;
 }
-
 .pillBtn:hover {
   border-color: rgba(56, 189, 248, 0.18);
   color: rgba(255, 255, 255, 0.92);
 }
-
 .pillBtn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
-
 .pillBtn.danger {
   border-color: rgba(239, 68, 68, 0.26);
 }
-
 .pillBtn.danger:hover {
   border-color: rgba(239, 68, 68, 0.45);
 }
@@ -1831,7 +1600,6 @@ onBeforeUnmount(() => {
   background: var(--panel2);
   border: 1px solid var(--stroke);
 }
-
 .pagerLeft {
   color: rgba(255, 255, 255, 0.72);
   font-weight: 850;
@@ -1840,7 +1608,6 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
 }
-
 .pagerDot {
   width: 6px;
   height: 6px;
@@ -1848,7 +1615,6 @@ onBeforeUnmount(() => {
   background: rgba(56, 189, 248, 0.75);
   box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.12);
 }
-
 .pagerRight {
   display: flex;
   gap: 8px;
@@ -1856,7 +1622,6 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
-
 .pagerBtn {
   height: 36px;
   padding: 0 12px;
@@ -1868,29 +1633,24 @@ onBeforeUnmount(() => {
   cursor: pointer;
   will-change: transform;
 }
-
 .pagerBtn:hover {
   border-color: rgba(56, 189, 248, 0.18);
   color: rgba(255, 255, 255, 0.92);
 }
-
 .pagerBtn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
-
 .pagerBtn.num {
   min-width: 38px;
   padding: 0 10px;
 }
-
 .pagerBtn.num.on {
   background: linear-gradient(90deg, rgba(56, 189, 248, 0.22), rgba(99, 102, 241, 0.14));
   border-color: rgba(56, 189, 248, 0.24);
   color: rgba(255, 255, 255, 0.95);
   box-shadow: 0 12px 30px rgba(56, 189, 248, 0.08);
 }
-
 .pagerEllipsis {
   color: rgba(255, 255, 255, 0.55);
   font-weight: 950;
@@ -1909,7 +1669,6 @@ onBeforeUnmount(() => {
   padding: 20px;
   z-index: 9999;
 }
-
 .modal {
   width: min(980px, 96vw);
   max-height: 88vh;
@@ -1921,7 +1680,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 26px 80px rgba(0, 0, 0, 0.55);
   will-change: transform, opacity;
 }
-
 .modalGlow {
   position: absolute;
   inset: -2px;
@@ -1931,7 +1689,6 @@ onBeforeUnmount(() => {
   opacity: 0.9;
   filter: blur(16px);
 }
-
 .modalTop {
   display: flex;
   align-items: center;
@@ -1942,7 +1699,6 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 1;
 }
-
 .modalTitle {
   display: flex;
   align-items: center;
@@ -1951,7 +1707,6 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.92);
   font-size: 22px;
 }
-
 .modalBody {
   padding: 16px;
   overflow: auto;
@@ -1966,30 +1721,26 @@ onBeforeUnmount(() => {
   gap: 12px;
   margin-bottom: 12px;
 }
-
 .imgCard {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 12px;
 }
-
 .imgLabel {
   font-weight: 900;
   color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
   margin-bottom: 10px;
 }
-
 .bigImg {
   width: 100%;
   height: 220px;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(0, 0, 0, 0.18);
 }
-
 .imgEmpty {
   height: 220px;
   display: grid;
@@ -2000,12 +1751,36 @@ onBeforeUnmount(() => {
   font-weight: 900;
 }
 
+.quickInfo {
+  display: grid;
+  gap: 10px;
+}
+.qi {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.qi .k {
+  color: rgba(255, 255, 255, 0.62);
+  font-weight: 950;
+  font-size: 12px;
+}
+.qi .v {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 900;
+  font-size: 12px;
+  text-align: right;
+}
+
 .kvGrid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
 }
-
 .kv {
   display: grid;
   grid-template-columns: 1.2fr 2fr;
@@ -2015,7 +1790,6 @@ onBeforeUnmount(() => {
   background: var(--panel2);
   border: 1px solid var(--stroke);
 }
-
 .k {
   color: rgba(255, 255, 255, 0.62);
   font-weight: 950;
@@ -2024,29 +1798,12 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .v {
   color: rgba(255, 255, 255, 0.88);
   font-weight: 850;
   font-size: 14px;
   word-break: break-word;
   line-height: 1.65;
-}
-
-/* No cell + mini logo */
-.idCell {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.logoMini {
-  width: 44px;
-  height: 44px;
-  object-fit: contain;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(0, 0, 0, 0.18);
 }
 
 /* Confirm Modal + Toast */
@@ -2060,7 +1817,6 @@ onBeforeUnmount(() => {
   place-items: center;
   padding: 20px;
 }
-
 .confirmCard {
   width: min(520px, 95vw);
   border-radius: 22px;
@@ -2072,7 +1828,6 @@ onBeforeUnmount(() => {
   overflow: hidden;
   will-change: transform, opacity;
 }
-
 .confirmCard::before {
   content: "";
   position: absolute;
@@ -2088,7 +1843,6 @@ onBeforeUnmount(() => {
     rgba(56, 189, 248, 0.35)
   );
 }
-
 .confirmCard.danger::before {
   background: linear-gradient(
     90deg,
@@ -2098,7 +1852,6 @@ onBeforeUnmount(() => {
     rgba(239, 68, 68, 0.35)
   );
 }
-
 .confirmIcon {
   width: 92px;
   height: 92px;
@@ -2108,7 +1861,6 @@ onBeforeUnmount(() => {
   place-items: center;
   position: relative;
 }
-
 .skull {
   width: 62px;
   height: 62px;
@@ -2121,22 +1873,18 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(56, 189, 248, 0.22);
   box-shadow: 0 18px 44px rgba(56, 189, 248, 0.14);
 }
-
 .confirmCard.danger .skull {
   background: rgba(239, 68, 68, 0.16);
   border: 1px solid rgba(239, 68, 68, 0.22);
   box-shadow: 0 18px 44px rgba(239, 68, 68, 0.14);
 }
-
 .skull i {
   font-size: 22px;
   color: rgba(56, 189, 248, 0.95);
 }
-
 .confirmCard.danger .skull i {
   color: rgba(239, 68, 68, 0.95);
 }
-
 .ring {
   position: absolute;
   border-radius: 999px;
@@ -2145,17 +1893,14 @@ onBeforeUnmount(() => {
   z-index: 1;
   animation: pulse 1.9s ease-in-out infinite;
 }
-
 .confirmCard.danger .ring {
   border-color: rgba(239, 68, 68, 0.2);
 }
-
 .ringB {
   inset: -10px;
   opacity: 0.55;
   animation-delay: 0.35s;
 }
-
 @keyframes pulse {
   0% {
     transform: scale(0.96);
@@ -2170,7 +1915,6 @@ onBeforeUnmount(() => {
     opacity: 0.55;
   }
 }
-
 .confirmTitle {
   text-align: center;
   font-weight: 950;
@@ -2179,7 +1923,6 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
 }
-
 .confirmText {
   margin-top: 8px;
   text-align: center;
@@ -2189,19 +1932,16 @@ onBeforeUnmount(() => {
   z-index: 2;
   line-height: 1.5;
 }
-
 .confirmName {
   display: inline-block;
   margin-left: 6px;
   color: rgba(255, 255, 255, 0.92);
 }
-
 .confirmHint {
   margin-top: 8px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.58);
 }
-
 .confirmActions {
   margin-top: 14px;
   display: flex;
@@ -2210,7 +1950,6 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 2;
 }
-
 .cBtn {
   height: 42px;
   padding: 0 14px;
@@ -2225,34 +1964,27 @@ onBeforeUnmount(() => {
   gap: 10px;
   will-change: transform;
 }
-
 .cBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 .cBtn.ghost:hover {
   border-color: rgba(56, 189, 248, 0.18);
 }
-
 .cBtn.info {
   border-color: rgba(56, 189, 248, 0.22);
   background: rgba(56, 189, 248, 0.12);
 }
-
 .cBtn.info:hover {
   border-color: rgba(56, 189, 248, 0.45);
 }
-
 .cBtn.danger {
   border-color: rgba(239, 68, 68, 0.28);
   background: rgba(239, 68, 68, 0.12);
 }
-
 .cBtn.danger:hover {
   border-color: rgba(239, 68, 68, 0.5);
 }
-
 .miniSpin {
   width: 14px;
   height: 14px;
@@ -2261,11 +1993,11 @@ onBeforeUnmount(() => {
   border-top-color: rgba(56, 189, 248, 0.95);
   animation: spin 0.75s linear infinite;
 }
-
 .confirmCard.danger .miniSpin {
   border-top-color: rgba(239, 68, 68, 0.95);
 }
 
+/* Toast */
 .toast {
   position: fixed;
   right: 18px;
@@ -2284,42 +2016,34 @@ onBeforeUnmount(() => {
   animation: toastIn 0.24s ease-out;
   will-change: transform, opacity;
 }
-
 @keyframes toastIn {
   from {
     transform: translateY(8px);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translateY(0px);
     opacity: 1;
   }
 }
-
 .toast.success {
   border-color: rgba(34, 197, 94, 0.22);
 }
-
 .toast.success i {
   color: rgba(34, 197, 94, 0.95);
 }
-
 .toast.error {
   border-color: rgba(239, 68, 68, 0.25);
 }
-
 .toast.error i {
   color: rgba(239, 68, 68, 0.95);
 }
-
 .toast.info {
   border-color: rgba(56, 189, 248, 0.22);
 }
-
 .toast.info i {
   color: rgba(56, 189, 248, 0.95);
 }
-
 .toastText {
   color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
@@ -2331,44 +2055,35 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr 1fr 160px;
   }
 }
-
 @media (max-width: 920px) {
   .topbar {
     grid-template-columns: 1fr 1fr;
   }
-
   .topActions {
     justify-content: flex-start;
   }
-
   .actions {
     min-width: 0;
     width: 100%;
     flex-wrap: wrap;
     justify-content: flex-end;
   }
-
   .filterWrap {
     width: 100%;
   }
-
   .kv {
     grid-template-columns: 1fr;
   }
-
   .tdLast {
     width: 100%;
   }
-
   .pager {
     flex-direction: column;
     align-items: stretch;
   }
-
   .pagerRight {
     justify-content: center;
   }
-
   .imageRow {
     grid-template-columns: 1fr;
   }
